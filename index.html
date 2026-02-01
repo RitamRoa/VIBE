@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VIBE: News in Ink</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="sticky-header">
+        <div class="brand">
+            <h1>VIBE <span class="jp-text">/ ニュース</span></h1>
+        </div>
+        
+        <div class="location-scroller">
+            <div class="location-track">
+                <button class="loc-btn active" data-loc="World" onclick="changeLocation('World')">WORLD</button>
+                <button class="loc-btn" data-loc="India" onclick="changeLocation('India')">INDIA</button>
+                <button class="loc-btn" data-loc="Bangalore" onclick="changeLocation('Bangalore')">BANGALORE</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="news-grid" class="news-container">
+        <!-- News Cards injected here -->
+        <div class="loading">Loading ink...</div>
+    </main>
+
+    <div class="bottom-spacer"></div>
+
+    <nav class="bottom-nav">
+        <button class="nav-btn active" onclick="changeCategory('home')">
+            <span class="jp-nav">General</span>
+            <span class="en-nav">HOME</span>
+        </button>
+        <button class="nav-btn" onclick="changeCategory('tech')">
+            <span class="jp-nav">Tech</span>
+            <span class="en-nav">TECH</span>
+        </button>
+        <button class="nav-btn" onclick="changeCategory('finance')">
+            <span class="jp-nav">Finance</span>
+            <span class="en-nav">FINANCE</span>
+        </button>
+        <button class="nav-btn" onclick="changeCategory('business')">
+            <span class="jp-nav">Biz</span>
+            <span class="en-nav">BUSINESS</span>
+        </button>
+    </nav>
+
+    <script src="sw.js"></script>
+    <script>
+        // State
+        let currentLoc = 'World';
+        let currentCat = 'home';
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchNews();
+            registerSW();
+        });
+
+        async function fetchNews() {
+            const grid = document.getElementById('news-grid');
+            grid.innerHTML = '<div class="loading">Inking press...</div>';
+            
+            try {
+                // Determine API category parameter
+                // Map internal categories to API params handled by backend logic
+                // Using port 8001 to match new backend instance if running locally via file opening, 
+                // but usually relative path `/news` implies same origin.
+                // If user is accessing http://localhost:8000 (old) it might still hit old server.
+                // We should assume the user will reload the page on the active server.
+                const response = await fetch(`/news?category=${currentCat}&location=${currentLoc}`);
+                const data = await response.json();
+
+                if (data.articles) {
+                    renderNews(data.articles);
+                } else {
+                    console.log('No articles in data:', data);
+                    grid.innerHTML = '<div class="error">No news found. (API returned empty)</div>';
+                }
+            } catch (e) {
+                console.error(e);
+                grid.innerHTML = '<div class="error">Connection failed. Check your connection.</div>';
+            }
+        }
+
+        function renderNews(articles) {
+            const grid = document.getElementById('news-grid');
+            grid.innerHTML = '';
+
+            if (articles.length === 0) {
+                grid.innerHTML = '<div class="padding-box">No headlines today. Silence is golden.</div>';
+                return;
+            }
+
+            articles.forEach((article, index) => {
+                const card = document.createElement('article');
+                card.className = 'news-card';
+                card.style.animationDelay = `${index * 0.05}s`;
+                
+                // Fallback image handling
+                const hasImage = article.urlToImage && article.urlToImage !== 'null';
+                
+                const imageHTML = hasImage 
+                    ? `<div class="card-image"><img src="${article.urlToImage}" alt="${article.title}" loading="lazy"></div>` 
+                    : '';
+
+                const date = new Date(article.publishedAt).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric'
+                });
+
+                card.innerHTML = `
+                    <a href="${article.url}" target="_blank" rel="noopener noreferrer">
+                        ${imageHTML}
+                        <div class="card-content">
+                            <div class="meta">
+                                <span class="source">${article.source}</span>
+                                <span class="date">${date}</span>
+                            </div>
+                            <h2>${article.title}</h2>
+                            <p>${article.description || ''}</p>
+                        </div>
+                    </a>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function changeLocation(loc) {
+            currentLoc = loc;
+            
+            // Update UI
+            document.querySelectorAll('.loc-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.loc === loc);
+            });
+            
+            fetchNews();
+        }
+
+        function changeCategory(cat) {
+            currentCat = cat;
+            
+            // Update UI
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                // Simple logic to find button by onclick content or index
+                // For simplicity, re-querying by onclick attr text match or refactor
+            });
+            
+            // Better UI update logic
+            const btns = document.querySelectorAll('.nav-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            // Find the button that triggered this or match by index logic
+            event.target.closest('.nav-btn').classList.add('active');
+
+            fetchNews();
+        }
+
+        function registerSW() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('SW registered', reg))
+                    .catch(err => console.log('SW failed', err));
+            }
+        }
+    </script>
+</body>
+</html>
