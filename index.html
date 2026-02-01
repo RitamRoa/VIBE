@@ -84,6 +84,9 @@
 
                 if (data.articles) {
                     renderNews(data.articles);
+                } else if (data.error) {
+                    console.error('API Error:', data.error);
+                    grid.innerHTML = `<div class="error">Error: ${data.error}</div>`;
                 } else {
                     console.log('No articles in data:', data);
                     grid.innerHTML = '<div class="error">No news found. (API returned empty)</div>';

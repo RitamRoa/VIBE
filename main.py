@@ -2,6 +2,7 @@ import json
 import os
 import time
 import requests
+import uvicorn
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -30,10 +31,10 @@ if not API_KEY:
 
 BASE_URL = "https://newsapi.org/v2"
 CACHE_FILE = "news_cache.json"
-CACHE_DURATION = 200 # 10 minutes in seconds
+CACHE_DURATION = 3600 # 1 hour to prevent hitting API rate limits
 
-def get_cached_data(key: str):
-    """Retrieve data from file-based cache if valid."""
+def get_cached_data(key: str, ignore_expiration: bool = False):
+    """Retrieve data from file-based cache. If ignore_expiration is True, returns data even if expired."""
     if not os.path.exists(CACHE_FILE):
         return None
     
@@ -43,8 +44,8 @@ def get_cached_data(key: str):
         
         if key in cache:
             entry = cache[key]
-            if time.time() - entry["timestamp"] < CACHE_DURATION:
-                print(f"Serving from cache: {key}")
+            if ignore_expiration or (time.time() - entry["timestamp"] < CACHE_DURATION):
+                print(f"Serving from cache: {key} (Expired: {time.time() - entry['timestamp'] > CACHE_DURATION})")
                 return entry["data"]
             else:
                 print(f"Cache expired: {key}")
@@ -201,9 +202,21 @@ def get_news(
             save_to_cache(cache_key, result)
             return result
         else:
+            print(f"API Error ({response.status_code}): {data.get('message')}")
+            # Try to serve expired cache if API fails (e.g. Rate Limit)
+            cached_response = get_cached_data(cache_key, ignore_expiration=True)
+            if cached_response:
+                return cached_response
+
             return {"error": data.get("message", "Unknown error from NewsAPI")}
 
     except Exception as e:
+        print(f"Exception: {e}")
+        # Try to serve expired cache if API fails
+        cached_response = get_cached_data(cache_key, ignore_expiration=True)
+        if cached_response:
+            return cached_response
+
         return {"error": str(e)}
 
 # Serve static files
