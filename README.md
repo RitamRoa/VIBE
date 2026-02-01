@@ -36,8 +36,11 @@
 
        .\/.venv/Scripts/python -m uvicorn main:app --reload host 0.0.0.0 --port 8000 
 
+
+
   VIBE / ニュース should now be working at localhost:8000 
 
+  ~ made with ❤️ by roa for you
   
        
 
