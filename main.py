@@ -30,7 +30,7 @@ if not API_KEY:
 
 BASE_URL = "https://newsapi.org/v2"
 CACHE_FILE = "news_cache.json"
-CACHE_DURATION = 3600  # 1 hour in seconds
+CACHE_DURATION = 200 # 10 minutes in seconds
 
 def get_cached_data(key: str):
     """Retrieve data from file-based cache if valid."""
