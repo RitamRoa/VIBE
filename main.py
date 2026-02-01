@@ -156,15 +156,39 @@ def get_news(
         response = requests.get(f"{BASE_URL}{endpoint}", params=params)
         data = response.json()
         
+        articles = []
         if response.status_code == 200:
-            # Normalize articles for frontend (handle missing images/content)
-            articles = []
-            for art in data.get("articles", []):
-                # Filter out [Removed] articles
+            articles = data.get("articles", [])
+            
+            # FALLBACK LOGIC
+            # If no articles found for India (General, Tech, Business, etc), try /everything
+            if not articles and location.lower() == "india":
+                print(f"No headlines found for India {category}. Attempting fallback to /everything...")
+                
+                query = "India" # Default for 'home'/'general'
+                if category == "finance": query = "finance India"
+                elif category == "business": query = "business India"
+                elif category == "tech": query = "technology India"
+                
+                fallback_params = {
+                    "apiKey": API_KEY,
+                    "sortBy": "publishedAt",
+                    "language": "en",
+                    "pageSize": 20,
+                    "q": query
+                }
+                
+                resp_fallback = requests.get(f"{BASE_URL}/everything", params=fallback_params)
+                if resp_fallback.status_code == 200:
+                    articles = resp_fallback.json().get("articles", [])
+
+            # Filter out [Removed] articles
+            final_articles = []
+            for art in articles:
                 if art.get("title") == "[Removed]":
                     continue
                     
-                articles.append({
+                final_articles.append({
                     "title": art.get("title"),
                     "description": art.get("description"),
                     "source": art.get("source", {}).get("name"),
@@ -173,7 +197,7 @@ def get_news(
                     "publishedAt": art.get("publishedAt")
                 })
             
-            result = {"articles": articles}
+            result = {"articles": final_articles}
             save_to_cache(cache_key, result)
             return result
         else:

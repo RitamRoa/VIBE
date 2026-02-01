@@ -79,10 +79,6 @@
             try {
                 // Determine API category parameter
                 // Map internal categories to API params handled by backend logic
-                // Using port 8001 to match new backend instance if running locally via file opening, 
-                // but usually relative path `/news` implies same origin.
-                // If user is accessing http://localhost:8000 (old) it might still hit old server.
-                // We should assume the user will reload the page on the active server.
                 const response = await fetch(`/news?category=${currentCat}&location=${currentLoc}`);
                 const data = await response.json();
 
