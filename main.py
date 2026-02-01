@@ -7,6 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from typing import Optional
+from dotenv import load_dotenv
+
+# Load Environment Variables
+load_dotenv()
 
 app = FastAPI()
 
@@ -20,7 +24,10 @@ app.add_middleware(
 )
 
 # API Configuration
-API_KEY = "3ba57d42e1b3416296ee50d5412d4948"
+API_KEY = os.getenv("NEWS_API_KEY")
+if not API_KEY:
+    raise ValueError("No NEWS_API_KEY found in environment variables")
+
 BASE_URL = "https://newsapi.org/v2"
 CACHE_FILE = "news_cache.json"
 CACHE_DURATION = 3600  # 1 hour in seconds
