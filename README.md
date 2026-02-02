@@ -1,6 +1,6 @@
 # VIBE / ニュース
 
-##### News for people who like japanese theme.
+### News for people who like japanese theme.
 
 ## Requirements 
 
