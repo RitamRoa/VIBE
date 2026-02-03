@@ -42,7 +42,7 @@
 
   ~ made with ❤️ by roa for you
 
-  if you want to contribute please make a CONTRIBUTING.md file.
+  if you want to contribute please fork this repository and make a CONTRIBUTING.md file and send a PR. The PR will be thoroughly reviewed within 24-48 hours.
        
 
    
