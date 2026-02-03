@@ -41,7 +41,8 @@
   VIBE / ニュース should now be working at localhost:8000 
 
   ~ made with ❤️ by roa for you
-  
+
+  if you want to contribute please make a CONTRIBUTING.md file.
        
 
    
