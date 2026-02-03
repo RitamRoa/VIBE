@@ -2,6 +2,8 @@
 
 ### News for people who like japanese theme.
 
+📚 **[View Complete Tech Stack Documentation](TECH_STACK.md)** - Detailed explanation of technologies used and resume-ready feature highlights.
+
 ## Requirements 
 
     fastapi
