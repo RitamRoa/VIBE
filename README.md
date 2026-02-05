@@ -15,19 +15,19 @@
 
 ## Installation
 
-   Step 1 - clone the repo 
+   Step 1 - clone the repo.
 
       git clone https://github.com/RitamRoa/VIBE.git
 
-  Step 2 - install requirements
+  Step 2 - install requirements.
 
        pip install -r requirements.txt 
 
-  Step 3 - get your key from newsapi.org
+  Step 3 - get your key from newsapi.org.
 
        in your .env file upload your newsapi.org api key -> NEWS_API_KEY: 12342456. 
 
-  Step 4 - intialize your virtual env 
+  Step 4 - intialize your virtual env i.e. .venv 
 
        python -m venv .venv 
        .\/.venv/Scripts/Activate.ps1
