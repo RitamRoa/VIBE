@@ -16,13 +16,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
     <header class="sticky-header">
         <div class="brand">
             <h1>VIBE <span class="jp-text">/ ニュース</span></h1>
+            <div class="reel-cta-group">
+                <span class="reel-cta-text">new feature added check it out!</span>
+                <button id="reel-btn" class="reel-launcher" onclick="openReelMode()">
+                    <span class="reel-icon">▶</span>
+                </button>
+            </div>
         </div>
         
         <div class="location-scroller">
@@ -38,6 +44,22 @@
         <!-- News Cards injected here -->
         <div class="loading">Loading ink...</div>
     </main>
+
+    <!-- Reel Overlay -->
+    <div id="reel-overlay" class="reel-overlay" style="display: none;">
+        <div class="reel-header">
+            <button class="close-reel" onclick="closeReelMode()">✕</button>
+            <div class="reel-toggles">
+                <!-- Single mode now -->
+            </div>
+        </div>
+
+        <div id="reel-content" class="reel-content">
+            <!-- Active Reel Item Injected Here -->
+        </div>
+
+        <div class="reel-instructions">Swipe Up for Next</div>
+    </div>
 
     <div class="bottom-spacer"></div>
 
@@ -65,13 +87,141 @@
         // State
         let currentLoc = 'World';
         let currentCat = 'home';
+        
+        // Reel State
+        let reelArticles = [];
+        let reelIndex = 0;
+        let reelLoc = 'World';
+        let touchStartY = 0;
+        let touchEndY = 0;
+        let isReelScrolling = false;
 
         // Init
         document.addEventListener('DOMContentLoaded', () => {
+            console.log("VIBE Engine: v3 Loaded"); // Version check
             fetchNews();
             registerSW();
+            
+            // Reel Swipe Listeners
+            const reelOverlay = document.getElementById('reel-overlay');
+            if (reelOverlay) {
+                // Touch
+                reelOverlay.addEventListener('touchstart', e => {
+                    touchStartY = e.changedTouches[0].screenY;
+                });
+                reelOverlay.addEventListener('touchend', e => {
+                    touchEndY = e.changedTouches[0].screenY;
+                    handleSwipe();
+                });
+                
+                // Mouse Wheel
+                reelOverlay.addEventListener('wheel', e => {
+                    if (isReelScrolling) return; // Debounce
+                    isReelScrolling = true;
+                    setTimeout(() => isReelScrolling = false, 800); // Cooldown
+
+                    if (e.deltaY > 0) {
+                        reelIndex++;
+                        renderReelItem();
+                    } else if (e.deltaY < 0) {
+                        reelIndex--;
+                        renderReelItem();
+                    }
+                });
+            } else {
+                console.error("Reel ID not found on init");
+            }
         });
 
+        /* --- Reel Logic --- */
+        function openReelMode() {
+            const overlay = document.getElementById('reel-overlay');
+            if (!overlay) {
+                console.error("Critical: Reel Overlay element missing.");
+                return;
+            }
+            
+            overlay.style.display = 'flex';
+            // Force reflow
+            void overlay.offsetWidth;
+            overlay.classList.add('active');
+            
+            // Load initial Data
+            fetchReelData();
+        }
+
+        function closeReelMode() {
+            const overlay = document.getElementById('reel-overlay');
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 400); // Wait for transition
+        }
+
+        // Removed setReelLocation as we only support World now for reels
+
+        async function fetchReelData() {
+            const container = document.getElementById('reel-content');
+            container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">Loading Reels...</div>';
+            
+            try {
+                // Reuse existing backend logic. For reel, we generally want "general" news
+                const response = await fetch(`/news?category=general&location=${reelLoc}`);
+                const data = await response.json();
+                
+                if (data.articles && data.articles.length > 0) {
+                    reelArticles = data.articles.filter(a => a.urlToImage); // Only show ones with images
+                    if (reelArticles.length === 0) {
+                        container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">No image reels available.</div>';
+                        return;
+                    }
+                    renderReelItem();
+                } else {
+                    container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">No news found.</div>';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderReelItem() {
+            if (reelIndex >= reelArticles.length) reelIndex = 0; // Loop
+            if (reelIndex < 0) reelIndex = reelArticles.length - 1;
+
+            const article = reelArticles[reelIndex];
+            const container = document.getElementById('reel-content');
+            
+            // We re-render the whole DOM node to re-trigger CSS animations
+            container.innerHTML = `
+                <div class="reel-item">
+                    <div class="reel-image-container">
+                        <img src="${article.urlToImage}" class="reel-image" alt="News Image">
+                    </div>
+                    <div class="reel-text-overlay">
+                        <div class="reel-line"></div>
+                        <h2 class="reel-title">${article.title}</h2>
+                        <p class="reel-desc">${article.description || ''}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleSwipe() {
+            const swipeDistance = touchStartY - touchEndY;
+            const threshold = 50; // min distance
+
+            if (swipeDistance > threshold) {
+                // Swiped UP -> Next
+                reelIndex++;
+                renderReelItem();
+            } else if (swipeDistance < -threshold) {
+                // Swiped DOWN -> Prev
+                reelIndex--;
+                renderReelItem();
+            }
+        }
+
+        /* --- Standard Logic --- */
         async function fetchNews() {
             const grid = document.getElementById('news-grid');
             grid.innerHTML = '<div class="loading">Inking press...</div>';

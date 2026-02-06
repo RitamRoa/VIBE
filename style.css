@@ -24,11 +24,272 @@ body {
 .sticky-header {
     position: sticky;
     top: 0;
-    padding-top: env(safe-area-inset-top);
-    background: var(--paper);
-    border-bottom: var(--border);
-    z-index: 100;
+    z-index: 1000;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(5px);
+    border-bottom: 1px solid var(--ink);
+    padding-top: max(10px, env(safe-area-inset-top));
 }
+
+.brand {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+}
+
+.brand h1 {
+    font-size: 1.5rem;
+    margin: 0;
+    letter-spacing: -1px;
+}
+
+.jp-text {
+    font-size: 0.8rem;
+    font-weight: normal;
+    color: #555;
+    margin-left: 5px;
+}
+
+/* Call to Action Group */
+.reel-cta-group {
+    display: flex;
+    align-items: center;
+    /* No gap here, we handle it in animation for smooth collapse */
+}
+
+.reel-cta-text {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    color: #444;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    opacity: 0;
+    max-width: 0;
+    /* Total duration 5s: Enter(1s) + Stay(2s) + Leave(1s) + Buffer */
+    animation: notifyCollapse 5s cubic-bezier(0.25, 1, 0.5, 1) 0.5s forwards;
+}
+
+@keyframes notifyCollapse {
+    0% { 
+        opacity: 0; 
+        max-width: 0;
+        margin-right: 0;
+    }
+    15% { 
+        opacity: 1; 
+        max-width: 200px; /* ample width for text */
+        margin-right: 10px;
+    }
+    75% { 
+        opacity: 1; 
+        max-width: 200px; 
+        margin-right: 10px;
+    }
+    100% { 
+        opacity: 0; 
+        max-width: 0;
+        margin-right: 0;
+    }
+}
+
+
+/* Reel Launcher - Arrow Button */
+.reel-launcher {
+    /* Minimalist Theme Update */
+    background: transparent;
+    color: var(--ink);
+    border: none; /* No circle border */
+    width: 44px; /* Touch target */
+    height: 44px;
+    padding: 0;
+    font-family: var(--font-serif);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.4s ease;
+    border-radius: 0;
+}
+
+.reel-launcher:hover {
+    background: transparent;
+    color: var(--ink);
+    transform: rotate(90deg) scale(1.1);
+}
+
+.reel-icon {
+    font-size: 1.2rem; /* Larger Arrow */
+    margin: 0;
+    line-height: 1;
+}
+
+/* Reel Overlay */
+.reel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: #000;
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    color: #fff;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(100%); /* Start hidden below */
+}
+
+.reel-overlay.active {
+    transform: translateY(0);
+}
+
+/* Reel Header (Controls) */
+.reel-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    padding-top: max(20px, env(safe-area-inset-top));
+    display: flex;
+    justify-content: space-between;
+    z-index: 5010;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+}
+
+.close-reel {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.reel-toggles {
+    display: flex;
+    gap: 10px;
+}
+
+.reel-loc {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.7);
+    padding: 5px 12px;
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 20px;
+}
+
+.reel-loc.active {
+    background: #00ffcc; /* Vibe Cyan */
+    color: #000;
+    border-color: #00ffcc;
+    box-shadow: 0 0 10px rgba(0,255,204,0.3);
+}
+
+/* Reel Content */
+.reel-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.reel-item {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Animations */
+@keyframes kenBurns {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.15); }
+}
+
+@keyframes textSlideUp {
+    0% { transform: translateY(100px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.reel-image-container {
+    width: 100%;
+    height: 100%;
+    background: #111;
+}
+
+.reel-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+    animation: kenBurns 15s linear infinite alternate;
+}
+
+.reel-text-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 30px;
+    padding-bottom: max(50px, env(safe-area-inset-bottom));
+    background: linear-gradient(to top, #000 10%, transparent);
+}
+
+.reel-line {
+    width: 60px;
+    height: 4px;
+    background: #00ffcc;
+    margin-bottom: 15px;
+    animation: textSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.reel-title {
+    font-family: var(--font-serif);
+    font-size: 1.8rem;
+    font-weight: bold;
+    line-height: 1.3;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    animation: textSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+    opacity: 0;
+}
+
+.reel-desc {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #ddd;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    animation: textSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    opacity: 0;
+}
+
+.reel-instructions {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.4);
+    animation: pulse 2s infinite;
+    pointer-events: none;
+    z-index: 5020;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+
 
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(15px); }
@@ -37,8 +298,12 @@ body {
 
 .brand {
     padding: 1rem;
-    border-bottom: 1px solid #eee; /* Very subtle separator inside header */
-    text-align: center;
+    border-bottom: 1px solid #eee;
+    display: flex; /* Flexbox for alignment */
+    justify-content: center; /* Center everything */
+    align-items: center; /* Vertically align */
+    gap: 15px; /* Space between title and button */
+    position: relative;
 }
 
 .brand h1 {
@@ -184,10 +449,10 @@ body {
     left: 0;
     width: 100%;
     background: var(--paper);
-    border-tcalc(65px + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom)var(--border);
+    border-top: var(--border);
     display: flex;
-    height: 65px;
+    height: calc(65px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
     z-index: 200;
 }
 

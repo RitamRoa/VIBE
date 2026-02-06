@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vibe-news-v1';
+const CACHE_NAME = 'vibe-news-v5';
 const ASSETS = [
     '/',
     '/index.html',
