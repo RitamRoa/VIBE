@@ -248,7 +248,7 @@
             container.innerHTML = `
                 <div class="reel-item" style="background: url('${article.urlToImage}') no-repeat center center/cover; animation: kenBurns 20s ease-out forwards;">
                     <div class="reel-gradient-overlay" style="position: absolute; width: 100%; height: 100%; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent 60%);"></div>
-                    <div class="reel-text-content" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px 20px 60px 20px; animation: textSlideUp 0.8s ease-out 0.3s forwards;">
+                    <div class="reel-text-content" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px 20px 60px 20px;">
                         <div class="reel-meta" style="margin-bottom: 10px; font-size: 0.8rem; opacity: 0.8;">
                             <span class="reel-source" style="font-weight: bold; margin-right: 10px;">${article.source.name || 'News'}</span>
                             <span class="reel-time">${new Date(article.publishedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>

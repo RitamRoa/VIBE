@@ -1,7 +1,9 @@
 {
     "name": "VIBE News",
     "short_name": "VIBE",
-    "start_url": ".",
+    "id": "/",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#000000",
