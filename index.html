@@ -87,22 +87,25 @@
         let currentLoc = 'World';
         let currentCat = 'home';
         
-        // Reel State
-        let reelArticles = [];
-        let reelIndex = 0;
-        let reelCategories = ['home', 'tech', 'finance', 'business'];
-        let currentReelCatIndex = 0;
-        let reelLoc = 'World';
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchEndX = 0;
-        let touchEndY = 0;
-        let isReelScrolling = false;
-        let isReelLoading = false; // Add safe guard
+        // Reel State Manager
+        const reelState = {
+            isActive: false,
+            isLoading: false,
+            articles: [],
+            index: 0,
+            catIndex: 0,
+            touchStartX: 0,
+            touchStartY: 0,
+            touchEndX: 0,
+            touchEndY: 0,
+            categories: ['home', 'tech', 'finance', 'business'],
+            location: 'World',
+            isLocked: false // prevents spamming interactions
+        };
 
         // Init
         document.addEventListener('DOMContentLoaded', () => {
-            console.log("VIBE Engine: v3.1 Loaded"); 
+            console.log("VIBE Engine: v3.1 Loaded");
             fetchNews();
             registerSW();
             
@@ -111,34 +114,29 @@
             if (reelOverlay) {
                 // Touch
                 reelOverlay.addEventListener('touchstart', e => {
-                    touchStartX = e.changedTouches[0].screenX;
-                    touchStartY = e.changedTouches[0].screenY;
-                }, {passive: true});
-                
+                    reelState.touchStartX = e.changedTouches[0].screenX;
+                    reelState.touchStartY = e.changedTouches[0].screenY;
+                }, {passive: false}); // Improved touch handling
+
                 reelOverlay.addEventListener('touchend', e => {
-                    touchEndX = e.changedTouches[0].screenX;
-                    touchEndY = e.changedTouches[0].screenY;
+                    reelState.touchEndX = e.changedTouches[0].screenX;
+                    reelState.touchEndY = e.changedTouches[0].screenY;
                     handleSwipe();
-                }, {passive: true});
+                }, {passive: false});
                 
                 // Mouse Wheel
                 reelOverlay.addEventListener('wheel', e => {
-                    if (isReelScrolling || isReelLoading) return; // Debounce
-                    isReelScrolling = true;
-                    setTimeout(() => isReelScrolling = false, 800); // Cooldown
-
-                    if (!reelArticles || reelArticles.length === 0) return;
+                    if (reelState.isLocked) return;
+                    
+                    reelState.isLocked = true;
+                    setTimeout(() => reelState.isLocked = false, 500); // 500ms debounce
 
                     if (e.deltaY > 0) {
-                        reelIndex++;
-                        if (reelIndex >= reelArticles.length) reelIndex = 0;
-                        renderReelItem();
+                        nextReelItem();
                     } else if (e.deltaY < 0) {
-                        reelIndex--;
-                        if (reelIndex < 0) reelIndex = reelArticles.length - 1;
-                        renderReelItem();
+                        prevReelItem();
                     }
-                }, {passive: true});
+                });
             }
         });
 
@@ -146,20 +144,20 @@
         function openReelMode() {
             const overlay = document.getElementById('reel-overlay');
             if (!overlay) return;
+
+            // Sync State
+            reelState.location = currentLoc;
+            reelState.isActive = true;
+            reelState.index = 0;
+            reelState.catIndex = 0;
             
-            // Sync Reel Loc with Main Loc
-            reelLoc = currentLoc;
-            
-            // Sync Reel Category with Main Cat if possible, else default to 0
-            const mapStats = {'home':0, 'tech':1, 'finance':2, 'business':3};
-            currentReelCatIndex = mapStats[currentCat] !== undefined ? mapStats[currentCat] : 0;
-            
+            // UI Prep
+            updateReelCategoryUI();
             overlay.style.display = 'flex';
-            // Force reflow
-            void overlay.offsetWidth;
+            void overlay.offsetWidth; // Reflow
             overlay.classList.add('active');
             
-            updateReelCategoryUI();
+            // Fetch
             fetchReelData();
         }
 
@@ -169,48 +167,45 @@
                 overlay.classList.remove('active');
                 setTimeout(() => { 
                     overlay.style.display = 'none'; 
-                    // Reset internal state
-                    document.getElementById('reel-content').innerHTML = '';
-                    reelArticles = [];
+                    // Cleanup
+                    reelState.isActive = false;
+                    reelState.articles = [];
+                    document.getElementById('reel-content').innerHTML = ''; 
                 }, 400);
             }
         }
 
         async function fetchReelData() {
-            if (isReelLoading) return;
             const container = document.getElementById('reel-content');
             if (!container) return;
             
-            isReelLoading = true;
-            container.innerHTML = '<div style="color:white; text-align:center; padding-top:45vh;"><p style="font-size:1.5rem;">Loading...</p></div>';
+            reelState.isLoading = true;
+            container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">Loading ink...</div>';
             
-            // Clear current articles handling
-            reelArticles = [];
-            
-            const cat = reelCategories[currentReelCatIndex];
+            const cat = reelState.categories[reelState.catIndex];
             
             try {
-                const response = await fetch(`/news?category=${cat}&location=${reelLoc}`);
+                const response = await fetch(`/news?category=${cat}&location=${reelState.location}`);
                 const data = await response.json();
                 
                 if (data.articles && data.articles.length > 0) {
-                    // Filter for images strictly
-                    reelArticles = data.articles.filter(a => a.urlToImage && a.urlToImage !== 'null' && a.urlToImage.startsWith('http')); 
+                    // Filter logic
+                    reelState.articles = data.articles.filter(a => a.urlToImage && a.urlToImage !== 'null'); 
                     
-                    if (reelArticles.length === 0) {
-                        container.innerHTML = '<div style="color:white; text-align:center; padding-top:45vh; padding-left:20px; padding-right:20px;">No image-rich stories available in this feed.<br><br>Swipe left/right for other categories.</div>';
-                        return;
+                    if (reelState.articles.length === 0) {
+                        container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">No image reels available for this category.</div>';
+                    } else {
+                        reelState.index = 0;
+                        renderReelItem();
                     }
-                    reelIndex = 0;
-                    renderReelItem();
                 } else {
-                    container.innerHTML = '<div style="color:white; text-align:center; padding-top:45vh;">No stories found.<br>Swipe to change category.</div>';
+                    container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">No news found.</div>';
                 }
             } catch (e) {
                 console.error(e);
-                container.innerHTML = '<div style="color:white; text-align:center; padding-top:45vh;">Connection Error.</div>';
+                container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">Error loading reels.</div>';
             } finally {
-                isReelLoading = false;
+                reelState.isLoading = false;
             }
         }
 
@@ -218,39 +213,36 @@
             const indicator = document.getElementById('reel-cat-indicator');
             if(!indicator) return;
             
-            const catName = reelCategories[currentReelCatIndex].toUpperCase();
-            const locName = reelLoc ? reelLoc.toUpperCase() : 'WORLD';
+            const catName = reelState.categories[reelState.catIndex].toUpperCase();
+            const locName = reelState.location ? reelState.location.toUpperCase() : 'WORLD';
             
             indicator.innerHTML = `<span class="reel-cat-pill">${locName} <span style="opacity:0.5; margin:0 4px;">/</span> ${catName}</span>`;
         }
 
         function renderReelItem() {
-            if (!reelArticles || reelArticles.length === 0) return;
-            
-            // Safety bounds
-            if (reelIndex >= reelArticles.length) reelIndex = 0;
-            if (reelIndex < 0) reelIndex = reelArticles.length - 1;
+            if (reelState.isLoading || !reelState.articles.length) return;
+
+            // Safe loop
+            if (reelState.index >= reelState.articles.length) reelState.index = 0;
+            if (reelState.index < 0) reelState.index = reelState.articles.length - 1;
 
             const container = document.getElementById('reel-content');
-            const article = reelArticles[reelIndex];
+            const article = reelState.articles[reelState.index];
             
             if (!article) return;
 
-            // Render with unique ID to force animation restart if needed
-            // Added noreferrer to prevent leaks
-            // Added click logic to toggle description? optional.
+            // High-Performance Render
             container.innerHTML = `
                 <div class="reel-item" style="background: url('${article.urlToImage}') no-repeat center center/cover; animation: kenBurns 20s ease-out forwards;">
                     <div class="reel-gradient-overlay" style="position: absolute; width: 100%; height: 100%; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent 60%);"></div>
-                    <div class="reel-text-content" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px 20px 80px 20px; animation: textSlideUp 0.6s ease-out forwards;">
+                    <div class="reel-text-content" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px 20px 60px 20px; animation: textSlideUp 0.8s ease-out 0.3s forwards;">
                         <div class="reel-meta" style="margin-bottom: 10px; font-size: 0.8rem; opacity: 0.8;">
                             <span class="reel-source" style="font-weight: bold; margin-right: 10px;">${article.source.name || 'News'}</span>
                             <span class="reel-time">${new Date(article.publishedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                         </div>
                         <div class="reel-line" style="width: 40px; height: 2px; background: #00ffcc; margin-bottom: 15px;"></div>
-                        <h2 class="reel-title" style="font-size: 1.5rem; line-height: 1.3; margin-bottom: 10px; font-family: var(--font-serif); text-shadow: 0 2px 4px rgba(0,0,0,0.8); color: white;">${article.title}</h2>
-                        <p class="reel-desc" style="font-size: 0.95rem; line-height: 1.5; color: #e0e0e0; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">${article.description || ''}</p>
-                        <a href="${article.url}" target="_blank" rel="noopener noreferrer" style="display:inline-block; margin-top:15px; color:#00ffcc; text-decoration:none; font-size:0.8rem; border-bottom:1px solid #00ffcc;">READ FULL STORY &rarr;</a>
+                        <h2 class="reel-title" style="font-size: 1.5rem; line-height: 1.3; margin-bottom: 10px; font-family: var(--font-serif); text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${article.title}</h2>
+                        <p class="reel-desc" style="font-size: 0.9rem; line-height: 1.4; opacity: 0.9; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${article.description || ''}</p>
                     </div>
                 </div>
             `;
@@ -258,41 +250,43 @@
             updateReelCategoryUI();
         }
 
+        function nextReelItem() {
+            reelState.index++;
+            renderReelItem();
+        }
+
+        function prevReelItem() {
+            reelState.index--;
+            renderReelItem();
+        }
+
         function handleSwipe() {
-            if (isReelLoading) return;
-            const deltaX = touchStartX - touchEndX;
-            const deltaY = touchStartY - touchEndY;
+            if (reelState.isLocked) return;
+            reelState.isLocked = true;
+            setTimeout(() => reelState.isLocked = false, 400); // 400ms debounce
+
+            const deltaX = reelState.touchStartX - reelState.touchEndX;
+            const deltaY = reelState.touchStartY - reelState.touchEndY;
             const threshold = 50; 
 
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                // Horizontal
+                // Horizontal - Category Check
                 if (Math.abs(deltaX) > threshold) {
                     if (deltaX > 0) {
-                        // Left Swipe -> Next Category
-                        currentReelCatIndex = (currentReelCatIndex + 1) % reelCategories.length;
+                        // Next Category
+                        reelState.catIndex = (reelState.catIndex + 1) % reelState.categories.length;
                     } else {
-                        // Right Swipe -> Prev Category
-                        currentReelCatIndex = (currentReelCatIndex - 1 + reelCategories.length) % reelCategories.length;
+                        // Prev Category
+                        reelState.catIndex = (reelState.catIndex - 1 + reelState.categories.length) % reelState.categories.length;
                     }
                     updateReelCategoryUI();
                     fetchReelData();
                 }
             } else {
-                // Vertical
+                // Vertical - Item Check
                 if (Math.abs(deltaY) > threshold) {
-                    if (!reelArticles || reelArticles.length === 0) return;
-                    
-                    if (deltaY > 0) {
-                        // Swipe Up -> Next Article
-                        reelIndex++;
-                        if (reelIndex >= reelArticles.length) reelIndex = 0;
-                        renderReelItem();
-                    } else {
-                        // Swipe Down -> Prev Article
-                        reelIndex--;
-                        if (reelIndex < 0) reelIndex = reelArticles.length - 1;
-                        renderReelItem();
-                    }
+                    if (deltaY > 0) nextReelItem();
+                    else prevReelItem();
                 }
             }
         }
