@@ -35,7 +35,6 @@
             <div class="location-track">
                 <button class="loc-btn active" data-loc="World" onclick="changeLocation('World')">WORLD</button>
                 <button class="loc-btn" data-loc="India" onclick="changeLocation('India')">INDIA</button>
-                <button class="loc-btn" data-loc="Bangalore" onclick="changeLocation('Bangalore')">BANGALORE</button>
             </div>
         </div>
     </header>
@@ -49,8 +48,8 @@
     <div id="reel-overlay" class="reel-overlay" style="display: none;">
         <div class="reel-header">
             <button class="close-reel" onclick="closeReelMode()">✕</button>
-            <div class="reel-toggles">
-                <!-- Single mode now -->
+            <div class="reel-category-indicator" id="reel-cat-indicator">
+                <!-- Injected via JS -->
             </div>
         </div>
 
@@ -58,7 +57,7 @@
             <!-- Active Reel Item Injected Here -->
         </div>
 
-        <div class="reel-instructions">Swipe Up for Next</div>
+        <div class="reel-instructions">Swipe Up/Down for Next • Swipe Left/Right for Category</div>
     </div>
 
     <div class="bottom-spacer"></div>
@@ -91,8 +90,12 @@
         // Reel State
         let reelArticles = [];
         let reelIndex = 0;
+        let reelCategories = ['home', 'tech', 'finance', 'business'];
+        let currentReelCatIndex = 0;
         let reelLoc = 'World';
+        let touchStartX = 0;
         let touchStartY = 0;
+        let touchEndX = 0;
         let touchEndY = 0;
         let isReelScrolling = false;
 
@@ -107,9 +110,11 @@
             if (reelOverlay) {
                 // Touch
                 reelOverlay.addEventListener('touchstart', e => {
+                    touchStartX = e.changedTouches[0].screenX;
                     touchStartY = e.changedTouches[0].screenY;
                 });
                 reelOverlay.addEventListener('touchend', e => {
+                    touchEndX = e.changedTouches[0].screenX;
                     touchEndY = e.changedTouches[0].screenY;
                     handleSwipe();
                 });
@@ -140,7 +145,12 @@
                 console.error("Critical: Reel Overlay element missing.");
                 return;
             }
+            Sync Reel Loc with Main Loc
+            reelLoc = currentLoc;
             
+            // Load initial Data
+            currentReelCatIndex = 0; // Default to Headlines/Home
+            updateReelCategoryUI();
             overlay.style.display = 'flex';
             // Force reflow
             void overlay.offsetWidth;
@@ -152,53 +162,89 @@
 
         function closeReelMode() {
             const overlay = document.getElementById('reel-overlay');
-            overlay.classList.remove('active');
-            setTimeout(() => {
-                overlay.style.display = 'none';
-            }, 400); // Wait for transition
+            if (overlay) {
+                overlay.classList.remove('active');
+                setTimeout(() => { overlay.style.display = 'none'; }, 400);
+            }
         }
-
-        // Removed setReelLocation as we only support World now for reels
 
         async function fetchReelData() {
             const container = document.getElementById('reel-content');
+            if (!container) return;
+            
             container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">Loading Reels...</div>';
             
+            const cat = reelCategories[currentReelCatIndex];
+            
             try {
-                // Reuse existing backend logic. For reel, we generally want "general" news
-                const response = await fetch(`/news?category=general&location=${reelLoc}`);
+                // Reuse existing backend logic.
+                const response = await fetch(`/news?category=${cat}&location=${reelLoc}`);
                 const data = await response.json();
                 
                 if (data.articles && data.articles.length > 0) {
-                    reelArticles = data.articles.filter(a => a.urlToImage); // Only show ones with images
+                    reelArticles = data.articles.filter(a => a.urlToImage && a.urlToImage !== 'null'); 
                     if (reelArticles.length === 0) {
-                        container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">No image reels available.</div>';
+                        container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">No image reels available for this category.</div>';
                         return;
                     }
+                    reelIndex = 0;
                     renderReelItem();
                 } else {
                     container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">No news found.</div>';
                 }
             } catch (e) {
                 console.error(e);
+                container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">Error loading reels.</div>';
             }
+        }
+
+        function updateReelCategoryUI() {
+            const indicator = document.getElementById('reel-cat-indicator');
+            if(!indicator) return;
+            
+            const catName = reelCategories[currentReelCatIndex].toUpperCase();
+            const locName = reelLoc ? reelLoc.toUpperCase() : 'WORLD';
+            
+            // Minimalist indicator logic showing Location and Category
+            indicator.innerHTML = `<span class="reel-cat-pill">${locName} <span style="opacity:0.5; margin:0 4px;">/</span> ${catName}</span>`;
         }
 
         function renderReelItem() {
             if (reelIndex >= reelArticles.length) reelIndex = 0; // Loop
             if (reelIndex < 0) reelIndex = reelArticles.length - 1;
 
-            const article = reelArticles[reelIndex];
-            const container = document.getElementById('reel-content');
+            const deltaX = touchStartX - touchEndX;
+            const deltaY = touchStartY - touchEndY;
             
-            // We re-render the whole DOM node to re-trigger CSS animations
-            container.innerHTML = `
-                <div class="reel-item">
-                    <div class="reel-image-container">
-                        <img src="${article.urlToImage}" class="reel-image" alt="News Image">
-                    </div>
-                    <div class="reel-text-overlay">
-                        <div class="reel-line"></div>
+            const threshold = 50; // min distance
+
+            // Determine if horizontal or vertical swipe is dominant
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // Horizontal Swipe - Change Category
+                if (Math.abs(deltaX) > threshold) {
+                    if (deltaX > 0) {
+                        // Swiped LEFT -> Next Category
+                        currentReelCatIndex = (currentReelCatIndex + 1) % reelCategories.length;
+                    } else {
+                        // Swiped RIGHT -> Prev Category
+                        currentReelCatIndex = (currentReelCatIndex - 1 + reelCategories.length) % reelCategories.length;
+                    }
+                    updateReelCategoryUI();
+                    fetchReelData();
+                }
+            } else {
+                // Vertical Swipe - Change Article
+                if (Math.abs(deltaY) > threshold) {
+                    if (deltaY > 0) {
+                        // Swiped UP -> Next
+                        reelIndex++;
+                        renderReelItem();
+                    } else {
+                        // Swiped DOWN -> Prev
+                        reelIndex--;
+                        renderReelItem();
+                    }
+                }s="reel-line"></div>
                         <h2 class="reel-title">${article.title}</h2>
                         <p class="reel-desc">${article.description || ''}</p>
                     </div>
