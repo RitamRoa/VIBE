@@ -196,13 +196,14 @@
                         container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">No image reels available for this category.</div>';
                     } else {
                         reelState.index = 0;
+                        reelState.isLoading = false; // Unblock rendering
                         renderReelItem();
                     }
                 } else {
                     container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">No news found.</div>';
                 }
             } catch (e) {
-                console.error(e);
+                console.error("Reel Error:", e);
                 container.innerHTML = '<div style="color:white; text-align:center; padding-top:50vh;">Error loading reels.</div>';
             } finally {
                 reelState.isLoading = false;
