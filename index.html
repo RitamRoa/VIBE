@@ -171,6 +171,9 @@
                     reelState.isActive = false;
                     reelState.articles = [];
                     document.getElementById('reel-content').innerHTML = ''; 
+                    // Clear header indicator so fresh animation plays next time (and only once)
+                    const indicator = document.getElementById('reel-cat-indicator');
+                    if(indicator) indicator.innerHTML = ''; 
                 }, 400);
             }
         }

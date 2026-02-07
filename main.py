@@ -26,8 +26,10 @@ app.add_middleware(
 
 # API Configuration
 API_KEY = os.getenv("NEWS_API_KEY")
+# Failure to find API key shouldn't crash the server start on Vercel, 
+# but will fail individual requests. This aids debugging.
 if not API_KEY:
-    raise ValueError("No NEWS_API_KEY found in environment variables")
+    print("WARNING: No NEWS_API_KEY found. API calls will fail.")
 
 BASE_URL = "https://newsapi.org/v2"
 # Use temporary directory for Lambda/Vercel compat
@@ -220,8 +222,13 @@ def get_news(
 
         return {"error": str(e)}
 
-# Serve static files
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
+if os.environ.get("VERCEL"):
+    # On Vercel, static files are handled by the platform (vercel.json)
+    # Mapping request root to static files here can conflict with serverless routing
+    pass
+else:
+    # Serve static files locally
+    app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
