@@ -210,12 +210,40 @@
         }
 
         function renderReelItem() {
-            if (reelIndex >= reelArticles.length) reelIndex = 0; // Loop
+            if (!reelArticles || reelArticles.length === 0) return;
+            
+            // Loop logic
+            if (reelIndex >= reelArticles.length) reelIndex = 0;
             if (reelIndex < 0) reelIndex = reelArticles.length - 1;
 
+            const container = document.getElementById('reel-content');
+            const article = reelArticles[reelIndex];
+            
+            if (!article) return;
+
+            // Render
+            container.innerHTML = `
+                <div class="reel-item" style="background: url('${article.urlToImage}') no-repeat center center/cover; animation: kenBurns 20s ease-out forwards;">
+                    <div class="reel-gradient-overlay" style="position: absolute; width: 100%; height: 100%; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent 60%);"></div>
+                    <div class="reel-text-content" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px 20px 60px 20px; animation: textSlideUp 0.8s ease-out 0.3s forwards;">
+                        <div class="reel-meta" style="margin-bottom: 10px; font-size: 0.8rem; opacity: 0.8;">
+                            <span class="reel-source" style="font-weight: bold; margin-right: 10px;">${article.source.name || 'News'}</span>
+                            <span class="reel-time">${new Date(article.publishedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                        <div class="reel-line" style="width: 40px; height: 2px; background: #00ffcc; margin-bottom: 15px;"></div>
+                        <h2 class="reel-title" style="font-size: 1.5rem; line-height: 1.3; margin-bottom: 10px; font-family: var(--font-serif); text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${article.title}</h2>
+                        <p class="reel-desc" style="font-size: 0.9rem; line-height: 1.4; opacity: 0.9; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${article.description || ''}</p>
+                    </div>
+                </div>
+            `;
+            
+            // Ensure UI category is always visible/updated
+            updateReelCategoryUI();
+        }
+
+        function handleSwipe() {
             const deltaX = touchStartX - touchEndX;
             const deltaY = touchStartY - touchEndY;
-            
             const threshold = 50; // min distance
 
             // Determine if horizontal or vertical swipe is dominant
@@ -244,26 +272,7 @@
                         reelIndex--;
                         renderReelItem();
                     }
-                }s="reel-line"></div>
-                        <h2 class="reel-title">${article.title}</h2>
-                        <p class="reel-desc">${article.description || ''}</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        function handleSwipe() {
-            const swipeDistance = touchStartY - touchEndY;
-            const threshold = 50; // min distance
-
-            if (swipeDistance > threshold) {
-                // Swiped UP -> Next
-                reelIndex++;
-                renderReelItem();
-            } else if (swipeDistance < -threshold) {
-                // Swiped DOWN -> Prev
-                reelIndex--;
-                renderReelItem();
+                }
             }
         }
 
