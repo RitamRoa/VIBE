@@ -373,19 +373,15 @@
         function changeCategory(cat) {
             currentCat = cat;
             
-            // Update UI
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                // Simple logic to find button by onclick content or index
-                // For simplicity, re-querying by onclick attr text match or refactor
-            });
-            
             // Better UI update logic
             const btns = document.querySelectorAll('.nav-btn');
             btns.forEach(b => b.classList.remove('active'));
             // Find the button that triggered this or match by index logic
-            event.target.closest('.nav-btn').classList.add('active');
+            const activeBtn = Array.from(btns).find(b => b.textContent.toLowerCase().includes(cat.toLowerCase()) || (cat === 'home' && b.textContent.includes('HOME')));
+            if (activeBtn) activeBtn.classList.add('active');
 
             fetchNews();
+        }
         }
 
         function registerSW() {
