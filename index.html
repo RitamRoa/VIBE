@@ -217,13 +217,16 @@
             const catName = reelState.categories[reelState.catIndex].toUpperCase();
             const locName = reelState.location ? reelState.location.toUpperCase() : 'WORLD';
             
-            const newHTML = `<span class="reel-cat-pill">${locName} <span style="opacity:0.5; margin:0 4px;">/</span> ${catName}</span>`;
-
-            // Smart Update: Prevent reconstruction (and animation restart) if content matches
-            // We strip whitespace to avoid false negatives from browser formatting
-            if (indicator.innerHTML.replace(/\s/g, "") === newHTML.replace(/\s/g, "")) return; 
+            // Check if pill exists
+            let pill = indicator.querySelector('.reel-cat-pill');
             
-            indicator.innerHTML = newHTML;
+            if (!pill) {
+                // Create New
+                indicator.innerHTML = `<span class="reel-cat-pill">${locName} <span style="opacity:0.5; margin:0 4px;">/</span> ${catName}</span>`;
+            } else {
+                // Update Existing (No Animation Trigger)
+                pill.innerHTML = `${locName} <span style="opacity:0.5; margin:0 4px;">/</span> ${catName}`;
+            }
         }
 
         function renderReelItem() {

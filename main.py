@@ -30,7 +30,8 @@ if not API_KEY:
     raise ValueError("No NEWS_API_KEY found in environment variables")
 
 BASE_URL = "https://newsapi.org/v2"
-CACHE_FILE = "news_cache.json"
+# Use temporary directory for Lambda/Vercel compat
+CACHE_FILE = "/tmp/news_cache.json" if os.environ.get("VERCEL") or os.name != 'nt' else "news_cache.json"
 CACHE_DURATION = 3600 # 1 hour to prevent hitting API rate limits
 
 def get_cached_data(key: str, ignore_expiration: bool = False):
