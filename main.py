@@ -222,13 +222,12 @@ def get_news(
 
         return {"error": str(e)}
 
-if os.environ.get("VERCEL"):
-    # On Vercel, static files are handled by the platform (vercel.json)
-    # Mapping request root to static files here can conflict with serverless routing
-    pass
-else:
-    # Serve static files locally
-    app.mount("/", StaticFiles(directory=".", html=True), name="static")
+# Serve static files locally and on Vercel (fallback)
+app.mount("/", StaticFiles(directory=".", html=True), name="static")
+
+@app.get("/")
+async def read_root():
+    return FileResponse('index.html')
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
