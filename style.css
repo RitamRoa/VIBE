@@ -33,15 +33,23 @@ body {
 
 .brand {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
+    gap: 10px;
     padding: 10px 20px;
+    flex-wrap: wrap;
 }
 
 .brand h1 {
-    font-size: 1.5rem;
+    font-size: clamp(1.2rem, 4vw, 1.5rem);
     margin: 0;
     letter-spacing: -1px;
+    flex: 1;
+    min-width: 140px;
+}
+
+.brand .reel-cta-group {
+    margin-left: auto;
 }
 
 .jp-text {
@@ -92,7 +100,7 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    max-width: 300px;
+    max-width: min(85vw, 320px);
     height: 100vh;
     background: var(--paper);
     border-right: 1px solid var(--ink);
@@ -211,10 +219,10 @@ body {
     background: var(--paper);
     border: 1px solid var(--ink);
     border-radius: 0;
-    padding: 30px;
+    padding: clamp(20px, 5vw, 30px);
     max-width: 600px;
     width: 100%;
-    max-height: 80vh;
+    max-height: 85vh;
     overflow-y: auto;
     position: relative;
 }
@@ -506,8 +514,8 @@ body {
 }
 
 .reel-line {
-    width: 60px;
-    height: 4px;
+    width: 50px;
+    height: 3px;
     background: #00ffcc;
     margin-bottom: 15px;
     animation: textSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -515,7 +523,7 @@ body {
 
 .reel-title {
     font-family: var(--font-serif);
-    font-size: 1.8rem;
+    font-size: clamp(1.3rem, 5vw, 1.8rem);
     font-weight: bold;
     line-height: 1.3;
     margin-bottom: 10px;
@@ -530,8 +538,9 @@ body {
     line-height: 1.5;
     color: #ddd;
     display: -webkit-box;
-    -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
     overflow: hidden;
     animation: textSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
     opacity: 0;
@@ -697,8 +706,9 @@ body {
     line-height: 1.6;
     margin: 0;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     overflow: hidden;
 }
 
@@ -755,7 +765,48 @@ body {
     color: #888;
 }
 
-/* Responsive */
+/* Mobile Optimizations */
+@media (max-width: 599px) {
+    .brand {
+        padding: 8px 12px;
+    }
+    
+    .brand .reel-cta-group {
+        display: none;
+    }
+    
+    .menu-item {
+        padding: 14px 16px;
+        font-size: 0.95rem;
+    }
+    
+    .modal-content h2 {
+        font-size: 1.3rem;
+    }
+    
+    .modal-content h3 {
+        font-size: 1rem;
+        margin-top: 15px;
+    }
+    
+    .brand h1 {
+        font-size: 1.2rem;
+    }
+    
+    .jp-text {
+        font-size: 0.65rem;
+    }
+    
+    .reel-desc {
+        font-size: 0.85rem;
+    }
+    
+    .location-scroller {
+        padding: 8px 12px;
+    }
+}
+
+/* Tablet & Desktop */
 @media (min-width: 600px) {
     .news-container {
         display: grid;
@@ -764,5 +815,9 @@ body {
     }
     .news-card {
         margin-bottom: 0;
+    }
+    
+    .brand .reel-cta-group {
+        display: flex;
     }
 }

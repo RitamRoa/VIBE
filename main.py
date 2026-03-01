@@ -7,7 +7,6 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from typing import Optional
 from dotenv import load_dotenv
 
 # Load Environment Variables
