@@ -75,6 +75,7 @@ body {
     width: 40px;
     height: 40px;
     flex-shrink: 0;
+    position: relative;
 }
 
 .hamburger-icon {
@@ -96,6 +97,103 @@ body {
 
 .menu-toggle:hover .hamburger-icon span {
     background: #555;
+}
+
+/* Onboarding Tooltips */
+.onboarding-tooltip {
+    position: absolute;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 6px 12px;
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 10000;
+    animation: tooltipFadeInOut 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    opacity: 0;
+}
+
+/* Arrow pointer */
+.onboarding-tooltip::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+}
+
+/* Menu tooltip - positioned below the hamburger */
+.menu-tooltip {
+    top: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.menu-tooltip::before {
+    border-width: 0 6px 6px 6px;
+    border-color: transparent transparent var(--ink) transparent;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Reel tooltip - positioned below the play button */
+.reel-tooltip {
+    top: 48px;
+    right: -5px;
+}
+
+.reel-tooltip::before {
+    border-width: 0 6px 6px 6px;
+    border-color: transparent transparent var(--ink) transparent;
+    top: -6px;
+    right: 8px;
+}
+
+@keyframes tooltipFadeInOut {
+    0% {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    10% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    70% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+}
+
+/* Additional transform for menu-tooltip centering */
+.menu-tooltip {
+    animation: menuTooltipFadeInOut 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes menuTooltipFadeInOut {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -5px);
+    }
+    10% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+    70% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -5px);
+    }
 }
 
 /* Menu Panel */
@@ -354,6 +452,7 @@ body {
     transition: transform 0.4s ease;
     border-radius: 0;
     flex-shrink: 0;
+    position: relative;
 }
 
 .reel-launcher:hover {
@@ -827,6 +926,11 @@ body {
     .menu-toggle {
         width: 40px;
         height: 40px;
+    }
+    
+    .onboarding-tooltip {
+        font-size: 0.65rem;
+        padding: 5px 10px;
     }
     
     .menu-item {
