@@ -820,8 +820,8 @@ body {
         font-size: 1.1rem;
     }
     
-    .brand .reel-cta-group {
-        display: none;
+    .reel-cta-text {
+        display: none !important;
     }
     
     .menu-toggle {
@@ -899,8 +899,8 @@ body {
         margin-bottom: 0;
     }
     
-    .brand .reel-cta-group {
-        display: flex;
+    .reel-cta-text {
+        display: block;
     }
     
     .brand {
