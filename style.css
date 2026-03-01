@@ -51,6 +51,237 @@ body {
     margin-left: 5px;
 }
 
+/* Hamburger Menu Toggle */
+.menu-toggle {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-right: 10px;
+}
+
+.hamburger-icon {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 24px;
+    height: 24px;
+    justify-content: center;
+}
+
+.hamburger-icon span {
+    width: 100%;
+    height: 2px;
+    background: var(--ink);
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-origin: center;
+}
+
+.menu-toggle:hover .hamburger-icon span {
+    background: #555;
+}
+
+/* Menu Panel */
+.menu-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: 300px;
+    height: 100vh;
+    background: var(--paper);
+    border-right: 1px solid var(--ink);
+    display: flex;
+    flex-direction: column;
+    z-index: 2000;
+    transform: translateX(-100%);
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    padding-top: max(10px, env(safe-area-inset-top));
+}
+
+.menu-panel.open {
+    transform: translateX(0);
+}
+
+.menu-close {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--ink);
+}
+
+.close-menu-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--ink);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+}
+
+.menu-nav {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 0;
+    margin: 0;
+}
+
+.menu-item {
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--faint);
+    padding: 16px 20px;
+    text-align: left;
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.menu-item:hover {
+    background: var(--faint);
+}
+
+.menu-item:active {
+    background: #d0d0d0;
+}
+
+.menu-footer {
+    padding: 20px;
+    border-top: 1px solid var(--ink);
+    font-size: 0.85rem;
+    color: #666;
+    text-align: center;
+}
+
+.heart {
+    color: #e74c3c;
+    font-size: 1rem;
+}
+
+/* Menu Overlay */
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    z-index: 1500;
+    transition: background 0.3s ease;
+    pointer-events: none;
+}
+
+.menu-overlay.open {
+    background: rgba(0, 0, 0, 0.3);
+    pointer-events: auto;
+    backdrop-filter: blur(2px);
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.modal.open {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: 0;
+    padding: 30px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--ink);
+    width: 32px;
+    height: 32px;
+    padding: 0;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 10px;
+}
+
+.modal-content h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.modal-content p {
+    margin: 10px 0;
+    line-height: 1.6;
+    color: #333;
+}
+
+.modal-content ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.modal-content li {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.contact-email {
+    background: var(--faint);
+    border: 1px solid var(--ink);
+    padding: 15px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.email-link {
+    color: var(--ink);
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.email-link:hover {
+    text-decoration: none;
+}
+
 /* Call to Action Group */
 .reel-cta-group {
     display: flex;

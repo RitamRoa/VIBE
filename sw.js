@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vibe-news-v5';
+const CACHE_NAME = 'vibe-news-v6';
 const ASSETS = [
     '/',
     '/index.html',
@@ -33,6 +33,20 @@ self.addEventListener('activate', (e) => {
 // Fetch - Stale-while-revalidate for API, Cache-first for assets
 self.addEventListener('fetch', (e) => {
     const url = new URL(e.request.url);
+
+    // Navigations: Network first to avoid stale app shell issues
+    if (e.request.mode === 'navigate') {
+        e.respondWith(
+            fetch(e.request)
+                .then((response) => {
+                    const copy = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', copy));
+                    return response;
+                })
+                .catch(() => caches.match('/index.html'))
+        );
+        return;
+    }
 
     // API calls: Network first, fall back to nothing (we handle offline in UI or use a different strategy)
     // Actually, for a news app, stick to Network First for data.
