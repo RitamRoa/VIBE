@@ -33,7 +33,7 @@ if not API_KEY:
 BASE_URL = "https://newsapi.org/v2"
 # Use temporary directory for Lambda/Vercel compat
 CACHE_FILE = "/tmp/news_cache.json" if os.environ.get("VERCEL") or os.name != 'nt' else "news_cache.json"
-CACHE_DURATION = 14400 # 1 hour to prevent hitting API rate limits
+CACHE_DURATION = 7200  # 2 hours - fresher content for reels, 96 max calls/day
 
 def get_cached_data(key: str, ignore_expiration: bool = False):
     """Retrieve data from file-based cache. If ignore_expiration is True, returns data even if expired."""
