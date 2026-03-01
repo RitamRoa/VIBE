@@ -33,30 +33,34 @@ body {
 
 .brand {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px;
-    padding: 10px 20px;
-    flex-wrap: wrap;
+    padding: 10px 15px;
+    gap: 8px;
 }
 
 .brand h1 {
-    font-size: clamp(1.2rem, 4vw, 1.5rem);
+    font-size: clamp(1.1rem, 4vw, 1.4rem);
     margin: 0;
     letter-spacing: -1px;
     flex: 1;
-    min-width: 140px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .brand .reel-cta-group {
-    margin-left: auto;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 .jp-text {
-    font-size: 0.8rem;
+    font-size: clamp(0.65rem, 2vw, 0.75rem);
     font-weight: normal;
-    color: #555;
-    margin-left: 5px;
+    color: #666;
+    margin-left: 4px;
 }
 
 /* Hamburger Menu Toggle */
@@ -68,9 +72,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    margin-right: 10px;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
 }
 
 .hamburger-icon {
@@ -336,12 +340,11 @@ body {
 
 /* Reel Launcher - Arrow Button */
 .reel-launcher {
-    /* Minimalist Theme Update */
     background: transparent;
     color: var(--ink);
-    border: none; /* No circle border */
-    width: 44px; /* Touch target */
-    height: 44px;
+    border: none;
+    width: 40px;
+    height: 40px;
     padding: 0;
     font-family: var(--font-serif);
     display: flex;
@@ -350,6 +353,7 @@ body {
     cursor: pointer;
     transition: transform 0.4s ease;
     border-radius: 0;
+    flex-shrink: 0;
 }
 
 .reel-launcher:hover {
@@ -809,7 +813,11 @@ body {
 /* Mobile Optimizations */
 @media (max-width: 599px) {
     .brand {
-        padding: 10px 15px;
+        padding: 8px 12px;
+    }
+    
+    .brand h1 {
+        font-size: 1.1rem;
     }
     
     .brand .reel-cta-group {
@@ -817,9 +825,8 @@ body {
     }
     
     .menu-toggle {
-        width: 44px;
-        height: 44px;
-        margin-right: 8px;
+        width: 40px;
+        height: 40px;
     }
     
     .menu-item {
