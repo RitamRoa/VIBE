@@ -1015,3 +1015,354 @@ body {
         padding: 10px 20px;
     }
 }
+
+/* ============================================================
+   Vibedia — magazine knowledge section (preserves VIBE identity)
+   ============================================================ */
+
+.brand-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.vibedia-back-link {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+    flex-shrink: 0;
+    padding: 8px 4px;
+    white-space: nowrap;
+}
+
+.vibedia-back-link:hover {
+    text-decoration: underline;
+}
+
+.menu-divider {
+    height: 1px;
+    background: var(--ink);
+    margin: 8px 20px;
+    opacity: 0.85;
+}
+
+.menu-item-link {
+    display: block;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
+.vibedia-body .news-container.vibedia-app {
+    display: block;
+    max-width: 1100px;
+    min-height: 70vh;
+    padding-bottom: 40px;
+}
+
+.vibedia-search {
+    display: flex;
+    gap: 0;
+    margin-bottom: 28px;
+    border: var(--border);
+}
+
+.vibedia-search-input {
+    flex: 1;
+    border: none;
+    padding: 14px 16px;
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    min-width: 0;
+}
+
+.vibedia-search-input::placeholder {
+    color: #888;
+    font-style: italic;
+}
+
+.vibedia-search-btn {
+    border: none;
+    border-left: var(--border);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0 18px;
+    cursor: pointer;
+}
+
+.vibedia-search-btn:hover {
+    background: #222;
+}
+
+.vibedia-section {
+    margin-bottom: 36px;
+}
+
+.vibedia-section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+}
+
+.vibedia-section-title {
+    margin: 0;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+}
+
+.vibedia-section-footer {
+    margin-top: 14px;
+    text-align: right;
+}
+
+.vibedia-see-more {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 2px;
+}
+
+.vibedia-see-more:hover {
+    opacity: 0.65;
+}
+
+/* Cards grid: 2 cols mobile, 5×2 desktop */
+.vibedia-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+@media (min-width: 900px) {
+    .vibedia-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+    }
+}
+
+.vibedia-grid .news-card {
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.vibedia-grid .news-card a {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.vibedia-grid .card-image {
+    height: 110px;
+    flex-shrink: 0;
+}
+
+@media (min-width: 900px) {
+    .vibedia-grid .card-image {
+        height: 120px;
+    }
+}
+
+.vibedia-grid .card-image--empty,
+.vibedia-article-hero--empty {
+    background: repeating-linear-gradient(
+        -45deg,
+        #f7f7f7,
+        #f7f7f7 8px,
+        #eeeeee 8px,
+        #eeeeee 16px
+    );
+    border-bottom: var(--border);
+    min-height: 110px;
+}
+
+.vibedia-grid .card-content {
+    flex: 1;
+    padding: 10px;
+}
+
+.vibedia-grid .news-card h2 {
+    font-size: 0.9rem;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+}
+
+.vibedia-grid .news-card p {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+}
+
+/* Skeletons */
+.vibedia-skeleton-card {
+    border: var(--border);
+    overflow: hidden;
+}
+
+.vibedia-skeleton-img {
+    height: 110px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: vibediaShimmer 1.2s ease-in-out infinite;
+    border-bottom: var(--border);
+}
+
+.vibedia-skeleton-lines {
+    padding: 12px;
+}
+
+.vibedia-skeleton-line {
+    height: 10px;
+    background: #ececec;
+    margin-bottom: 8px;
+    animation: vibediaShimmer 1.2s ease-in-out infinite;
+}
+
+.vibedia-skeleton-line.short {
+    width: 60%;
+}
+
+@keyframes vibediaShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Article detail */
+.vibedia-article {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.vibedia-article-hero {
+    width: 100%;
+    max-height: 360px;
+    overflow: hidden;
+    border: var(--border);
+    margin-bottom: 20px;
+}
+
+.vibedia-article-hero img {
+    width: 100%;
+    height: 100%;
+    max-height: 360px;
+    object-fit: cover;
+    filter: grayscale(100%) contrast(1.15);
+    display: block;
+}
+
+.vibedia-article-hero:hover img {
+    filter: grayscale(0%) contrast(1);
+    transition: filter 0.5s ease;
+}
+
+.vibedia-article-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+    font-family: var(--font-sans);
+}
+
+.vibedia-bookmark-btn {
+    background: var(--paper);
+    border: var(--border);
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.vibedia-bookmark-btn.is-active {
+    background: var(--ink);
+    color: var(--paper);
+}
+
+.vibedia-wiki-link {
+    color: var(--ink);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.vibedia-article-title {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    margin: 0 0 10px 0;
+    line-height: 1.25;
+    letter-spacing: -0.03em;
+}
+
+.vibedia-article-desc {
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #666;
+    margin: 0 0 18px 0;
+}
+
+.vibedia-article-extract {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: #222;
+    white-space: pre-wrap;
+}
+
+.vibedia-related {
+    margin-top: 40px;
+}
+
+.vibedia-scroll-sentinel {
+    padding: 20px 0 40px;
+    text-align: center;
+}
+
+.vibedia-error,
+.error {
+    text-align: center;
+    padding: 40px 20px;
+    color: #444;
+    border: var(--border);
+    margin: 20px 0;
+}
+
+.padding-box {
+    text-align: center;
+    padding: 30px 16px;
+    color: #666;
+    font-style: italic;
+}
+
+@media (max-width: 599px) {
+    .vibedia-search-btn {
+        padding: 0 12px;
+    }
+
+    .vibedia-section-title {
+        font-size: 1.1rem;
+    }
+}

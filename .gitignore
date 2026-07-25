@@ -11,4 +11,5 @@ venv/
 
 # App Specific
 news_cache.json
+wiki_cache.json
 debug_api.py

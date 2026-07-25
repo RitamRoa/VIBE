@@ -3,16 +3,28 @@ import os
 import time
 import requests
 import uvicorn
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 
+from app.routes.wiki import router as wiki_router
+from app.services.wiki_service import wiki_service
+
 # Load Environment Variables
 load_dotenv()
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Manage shared async resources (Wikipedia HTTP client)."""
+    yield
+    await wiki_service.close()
+
+
+app = FastAPI(lifespan=lifespan)
 
 # Enable CORS
 app.add_middleware(
@@ -22,6 +34,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Vibedia Wikipedia API (must register before StaticFiles mount)
+app.include_router(wiki_router)
 
 # API Configuration
 API_KEY = os.getenv("NEWS_API_KEY")
@@ -221,12 +236,29 @@ def get_news(
 
         return {"error": str(e)}
 
-# Serve static files locally and on Vercel (fallback)
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
-
 @app.get("/")
 async def read_root():
-    return FileResponse('index.html')
+    return FileResponse("index.html")
+
+
+@app.get("/vibedia")
+@app.get("/vibedia/")
+async def vibedia_home_page():
+    """Vibedia magazine shell."""
+    return FileResponse("vibedia.html")
+
+
+@app.get("/vibedia/{path:path}")
+async def vibedia_spa(path: str):
+    """
+    Client-side routes under /vibedia/* (topic, article, search).
+    Always serve the Vibedia shell; the frontend router resolves the view.
+    """
+    return FileResponse("vibedia.html")
+
+
+# Serve static files locally and on Vercel (after API + page routes)
+app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vibedia — VIBE</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css?v=9">
+</head>
+<body class="vibedia-body">
+
+    <header class="sticky-header">
+        <div class="brand">
+            <button class="menu-toggle" onclick="toggleMenu()" aria-label="Menu">
+                <span class="hamburger-icon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+            </button>
+            <h1>
+                <a id="vibedia-brand-link" href="/vibedia" class="brand-link">
+                    Vibedia <span class="jp-text">/ 知識</span>
+                </a>
+            </h1>
+            <a id="vibedia-back" class="vibedia-back-link" href="/">← News</a>
+        </div>
+    </header>
+
+    <!-- Menu Panel -->
+    <div id="menu-panel" class="menu-panel">
+        <div class="menu-close">
+            <button class="close-menu-btn" onclick="toggleMenu()">✕</button>
+        </div>
+        <nav class="menu-nav">
+            <button class="menu-item" onclick="openModal('about')">About</button>
+            <button class="menu-item" onclick="openModal('terms')">Terms & Conditions</button>
+            <button class="menu-item" onclick="openModal('contact')">Contact</button>
+            <div class="menu-divider" role="separator"></div>
+            <a class="menu-item menu-item-link" href="/vibedia">Vibedia</a>
+            <div class="menu-divider" role="separator"></div>
+        </nav>
+        <div class="menu-footer">made with <span class="heart">❤</span> by roa</div>
+    </div>
+
+    <div id="menu-overlay" class="menu-overlay" onclick="toggleMenu()"></div>
+
+    <div id="about-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('about')">✕</button>
+            <h2>About Vibedia</h2>
+            <p>Vibedia is a Wikipedia-powered knowledge section for VIBE — curated like a minimalist Japanese magazine, not an encyclopedia dump.</p>
+            <p>All article content is sourced from Wikipedia and belongs to its respective authors under Creative Commons licenses.</p>
+        </div>
+    </div>
+
+    <div id="terms-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('terms')">✕</button>
+            <h2>Terms & Conditions</h2>
+            <p>Wikipedia content is provided via the Wikimedia APIs. VIBE does not claim ownership of encyclopedia articles or images.</p>
+            <p>This service is provided as-is and may be limited by upstream availability and rate limits.</p>
+        </div>
+    </div>
+
+    <div id="contact-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('contact')">✕</button>
+            <h2>Contact</h2>
+            <div class="contact-email">
+                <strong>Email:</strong><br>
+                <a href="mailto:ritamrao48@gmail.com" class="email-link">ritamrao48@gmail.com</a>
+            </div>
+        </div>
+    </div>
+
+    <main id="vibedia-app" class="vibedia-app news-container">
+        <div class="loading">Inking press...</div>
+    </main>
+
+    <div class="bottom-spacer"></div>
+
+    <script src="/js/vibedia/api.js"></script>
+    <script src="/js/vibedia/components.js"></script>
+    <script src="/js/vibedia/app.js"></script>
+</body>
+</html>

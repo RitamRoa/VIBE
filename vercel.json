@@ -5,6 +5,18 @@
             "destination": "/main.py"
         },
         {
+            "source": "/wiki(.*)",
+            "destination": "/main.py"
+        },
+        {
+            "source": "/vibedia",
+            "destination": "/main.py"
+        },
+        {
+            "source": "/vibedia/(.*)",
+            "destination": "/main.py"
+        },
+        {
             "source": "/docs",
             "destination": "/main.py"
         },
