@@ -1051,15 +1051,31 @@ body {
     text-decoration: underline;
 }
 
-/* Single ink rule above + below Vibedia (no double lines) */
-.menu-nav .menu-item:has(+ .menu-item-vibedia) {
+/* App switcher: VIBE - News / Vibedia */
+.menu-nav > .menu-item:has(+ .menu-app-switcher) {
     border-bottom: none;
 }
 
-.menu-item-vibedia {
+.menu-app-switcher {
     border-top: 1px solid var(--ink);
     border-bottom: 1px solid var(--ink);
     margin-top: 4px;
+}
+
+.menu-app-switcher .menu-item {
+    border-bottom: 1px solid var(--faint);
+}
+
+.menu-app-switcher .menu-item:last-child {
+    border-bottom: none;
+}
+
+.menu-item-nav {
+    width: 100%;
+}
+
+.menu-item.is-current {
+    font-weight: 700;
 }
 
 .menu-item-link {

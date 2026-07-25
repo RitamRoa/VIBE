@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css?v=11">
+    <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body class="vibedia-body">
 
@@ -45,7 +45,10 @@
             <button class="menu-item" onclick="openModal('about')">About</button>
             <button class="menu-item" onclick="openModal('terms')">Terms & Conditions</button>
             <button class="menu-item" onclick="openModal('contact')">Contact</button>
-            <a class="menu-item menu-item-link menu-item-vibedia" href="/vibedia">Vibedia</a>
+            <div class="menu-app-switcher">
+                <a class="menu-item menu-item-link" href="/">VIBE - News</a>
+                <button type="button" class="menu-item menu-item-nav is-current" aria-current="page">Vibedia</button>
+            </div>
         </nav>
         <div class="menu-footer">made with <span class="heart">❤</span> by roa</div>
     </div>
