@@ -1412,23 +1412,6 @@ body {
     font-family: var(--font-sans);
 }
 
-.vibedia-bookmark-btn {
-    background: var(--paper);
-    border: var(--border);
-    font-family: var(--font-sans);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: 8px 12px;
-    cursor: pointer;
-}
-
-.vibedia-bookmark-btn.is-active {
-    background: var(--ink);
-    color: var(--paper);
-}
-
 .vibedia-wiki-link {
     color: var(--ink);
     font-size: 0.8rem;

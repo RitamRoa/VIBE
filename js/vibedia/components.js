@@ -5,35 +5,12 @@
 (function (global) {
   "use strict";
 
-  const BOOKMARK_KEY = "vibedia_bookmarks";
-
   function escapeHtml(str) {
     return String(str == null ? "" : str)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
-  }
-
-  function getBookmarks() {
-    try {
-      return JSON.parse(localStorage.getItem(BOOKMARK_KEY) || "[]");
-    } catch (_) {
-      return [];
-    }
-  }
-
-  function isBookmarked(title) {
-    return getBookmarks().includes(title);
-  }
-
-  function toggleBookmark(title) {
-    const list = getBookmarks();
-    const idx = list.indexOf(title);
-    if (idx >= 0) list.splice(idx, 1);
-    else list.push(title);
-    localStorage.setItem(BOOKMARK_KEY, JSON.stringify(list));
-    return list.includes(title);
   }
 
   /**
@@ -285,7 +262,7 @@
   }
 
   /**
-   * ArticlePage — large visual, title, summary, wiki link, related, bookmark.
+   * ArticlePage — large visual, title, summary, wiki link, related.
    * @param {object} article
    * @returns {HTMLElement}
    */
@@ -293,7 +270,6 @@
     const root = document.createElement("article");
     root.className = "vibedia-article";
 
-    const bookmarked = isBookmarked(article.title);
     root.appendChild(ArticleVisual(article, { hero: true }));
 
     const body = document.createElement("div");
@@ -305,9 +281,6 @@
 
     body.innerHTML = `
       <div class="vibedia-article-actions">
-        <button type="button" class="vibedia-bookmark-btn ${bookmarked ? "is-active" : ""}" aria-pressed="${bookmarked}">
-          ${bookmarked ? "★ Bookmarked" : "☆ Bookmark"}
-        </button>
         <a class="vibedia-wiki-link" href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer">
           View on Wikipedia ↗
         </a>
@@ -317,14 +290,6 @@
       <div class="vibedia-article-extract">${escapeHtml(article.extract || article.summary || "No summary available.")}</div>`;
 
     root.appendChild(body);
-
-    const btn = body.querySelector(".vibedia-bookmark-btn");
-    btn.addEventListener("click", () => {
-      const on = toggleBookmark(article.title);
-      btn.classList.toggle("is-active", on);
-      btn.setAttribute("aria-pressed", String(on));
-      btn.textContent = on ? "★ Bookmarked" : "☆ Bookmark";
-    });
 
     if (article.related && article.related.length) {
       const related = document.createElement("section");
@@ -364,7 +329,5 @@
     ArticlePage,
     ErrorState,
     EmptyState,
-    isBookmarked,
-    toggleBookmark,
   };
 })(window);
