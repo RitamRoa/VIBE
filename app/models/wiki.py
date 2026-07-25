@@ -82,8 +82,13 @@ class JourneyArticle(BaseModel):
 
 
 class JourneyResponse(BaseModel):
-    """One Journey batch plus opaque cursor for the next prefetch."""
+    """One finite Journey issue (~20 slides). next_cursor is unused for endless scroll."""
 
     articles: List[JourneyArticle]
     next_cursor: Optional[str] = None
+    title: str = "Journey"
+    total: int = 0
+    mode: str = "surprise"
+    topics: List[str] = Field(default_factory=list)
+
 

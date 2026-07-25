@@ -1645,6 +1645,55 @@ body {
     background: #222;
 }
 
+.journey-complete-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.journey-progress {
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    color: var(--ink);
+    margin: 0 0 18px;
+    line-height: 1;
+}
+
+.journey-action-secondary {
+    width: 100%;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 16px;
+    cursor: pointer;
+}
+
+.journey-action-secondary:hover {
+    background: #f4f4f4;
+}
+
+.journey-action-ghost {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: #666;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 14px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 .journey-status {
     font-family: var(--font-serif);
     font-size: 1rem;

@@ -1,40 +1,28 @@
 """
-Journey service — curated fullscreen reading sessions.
+Journey service — finite curated reading sessions (~20 articles).
 
 Reuses wiki_service for fetching/normalization and image resolution.
 Never hits Wikipedia's random endpoint for Surprise Me.
+Never builds an endless feed — one issue has a beginning, middle, and end.
 """
 
 from __future__ import annotations
 
 import asyncio
-import base64
-import json
-from typing import Any, Dict, List, Optional, Set
+import hashlib
+import random
+from typing import List, Optional, Set
 
 from app.config import (
     JOURNEY_DEFAULT_LIMIT,
+    JOURNEY_LENGTH,
     get_category,
+    journey_title,
     list_journey_topic_ids,
+    resolve_explore_topics,
 )
 from app.models.wiki import JourneyArticle, JourneyResponse, WikiArticleCard
 from app.services.wiki_service import wiki_service
-
-
-def _encode_cursor(payload: Dict[str, Any]) -> str:
-    raw = json.dumps(payload, separators=(",", ":"), ensure_ascii=True)
-    return base64.urlsafe_b64encode(raw.encode("utf-8")).decode("ascii")
-
-
-def _decode_cursor(cursor: Optional[str]) -> Dict[str, Any]:
-    if not cursor:
-        return {}
-    try:
-        raw = base64.urlsafe_b64decode(cursor.encode("ascii")).decode("utf-8")
-        data = json.loads(raw)
-        return data if isinstance(data, dict) else {}
-    except Exception:  # noqa: BLE001
-        return {}
 
 
 def _article_id(card: WikiArticleCard) -> str:
@@ -62,19 +50,19 @@ def _normalize(card: WikiArticleCard, category_label: str) -> JourneyArticle:
     )
 
 
+def _shuffle_key(seed: str, title: str) -> str:
+    return hashlib.sha256(f"{seed}:{title}".encode("utf-8")).hexdigest()
+
+
 def _interleave(
-    buckets: Dict[str, List[JourneyArticle]],
+    buckets: dict[str, List[JourneyArticle]],
     topic_order: List[str],
     *,
     limit: int,
     exclude: Set[str],
 ) -> List[JourneyArticle]:
-    """
-    Round-robin merge that prefers alternating categories.
-
-    Avoids consecutive articles from the same category whenever possible.
-    """
-    queues: Dict[str, List[JourneyArticle]] = {
+    """Round-robin merge preferring alternating categories."""
+    queues: dict[str, List[JourneyArticle]] = {
         tid: list(items) for tid, items in buckets.items()
     }
     result: List[JourneyArticle] = []
@@ -108,7 +96,6 @@ def _interleave(
                     q.append(deferred)
                 break
             if deferred and not progressed:
-                # No alternative available — accept deferred
                 if deferred.id not in exclude:
                     exclude.add(deferred.id)
                     result.append(deferred)
@@ -123,110 +110,103 @@ def _interleave(
 
 
 class JourneyService:
-    """Builds Surprise / topic Journey batches via existing wiki_service."""
+    """Builds one finite Journey issue via existing wiki_service."""
 
-    async def _fetch_topic(
-        self, tid: str, token: Optional[str]
-    ) -> tuple[str, List[JourneyArticle], Optional[str]]:
+    async def _pool_for_topic(
+        self, tid: str, *, variation_seed: str
+    ) -> List[JourneyArticle]:
+        """
+        Prefer curated high-quality seeds (shuffled per session), then category pages.
+        """
         cfg = get_category(tid)
-        label = cfg["label"] if cfg else tid.title()
-        try:
-            page = await wiki_service.get_topic(tid, token)
-        except Exception as exc:  # noqa: BLE001
-            print(f"Journey topic fetch error ({tid}): {exc}")
-            return tid, [], token
-        articles = [_normalize(card, label) for card in page.articles]
-        return tid, articles, page.continue_token
+        if not cfg:
+            return []
+        label = cfg["label"]
+        seeds = list(cfg.get("seeds") or [])
+        seeds.sort(key=lambda t: _shuffle_key(variation_seed, t))
+
+        cards: List[WikiArticleCard] = []
+        if seeds:
+            cards = await wiki_service.fetch_cards_by_titles(seeds)
+            cards = await wiki_service.images.attach_to_cards(cards, category=label)
+        elif cfg.get("type") == "category" and cfg.get("wikipedia_category"):
+            # Neighbour topics without seeds: one category page only
+            try:
+                page = await wiki_service.get_topic(tid, None)
+                cards = list(page.articles)
+            except Exception as exc:  # noqa: BLE001
+                print(f"Journey category pool ({tid}): {exc}")
+
+        # Stable per-session shuffle of the pool (vary Begin Again)
+        cards = sorted(cards, key=lambda c: _shuffle_key(variation_seed, c.title))
+        return [_normalize(c, label) for c in cards]
 
     async def get_journey(
         self,
         *,
         mode: str = "surprise",
         topics: Optional[List[str]] = None,
-        limit: int = JOURNEY_DEFAULT_LIMIT,
-        cursor: Optional[str] = None,
+        limit: int = JOURNEY_LENGTH,
         exclude: Optional[List[str]] = None,
+        variation: Optional[str] = None,
     ) -> JourneyResponse:
         """
-        Return up to ``limit`` normalized Journey articles.
+        Return one finite Journey (~20 articles). No endless pagination.
 
-        mode=surprise → balanced mix across all Journey topics.
-        mode=topics   → only the selected topic ids.
+        mode=surprise → balanced mix across Journey topics.
+        mode=topics   → selected intro topics.
+        mode=explore  → neighbouring knowledge areas (Continue Exploring).
         """
-        limit = max(1, min(int(limit or JOURNEY_DEFAULT_LIMIT), 40))
-        state = _decode_cursor(cursor)
+        limit = max(1, min(int(limit or JOURNEY_LENGTH), JOURNEY_LENGTH))
         seen: Set[str] = set(exclude or [])
-        seen.update(state.get("seen") or [])
-
         mode_norm = (mode or "surprise").strip().lower()
-        if mode_norm not in {"surprise", "topics"}:
+        if mode_norm not in {"surprise", "topics", "explore"}:
             mode_norm = "surprise"
 
         journey_ids = list_journey_topic_ids()
+        source_topics = [
+            str(t).strip().lower()
+            for t in (topics or [])
+            if str(t).strip()
+        ]
 
         if mode_norm == "surprise":
             topic_ids = journey_ids
+        elif mode_norm == "explore":
+            bases = source_topics or journey_ids
+            # Only expand from known journey roots
+            bases = [t for t in bases if t in journey_ids or get_category(t)]
+            topic_ids = resolve_explore_topics(bases)
+            if not topic_ids:
+                topic_ids = journey_ids
         else:
-            requested = topics or state.get("topics") or []
             topic_ids = []
-            for raw in requested:
-                tid = str(raw).strip().lower()
+            for tid in source_topics:
                 cfg = get_category(tid)
-                if not cfg or cfg.get("type") == "random":
-                    continue
-                if tid not in topic_ids and (
-                    tid in journey_ids or cfg.get("type") == "category"
-                ):
+                if cfg and cfg.get("type") != "random" and tid not in topic_ids:
                     topic_ids.append(tid)
             if not topic_ids:
                 topic_ids = journey_ids
 
-        tokens: Dict[str, Optional[str]] = dict(state.get("tokens") or {})
+        # Variation salt so Begin Again / new sessions reorder selections
+        salt = variation or str(random.randint(1, 10_000_000))
 
-        fetched = await asyncio.gather(
-            *[self._fetch_topic(tid, tokens.get(tid)) for tid in topic_ids]
+        pools = await asyncio.gather(
+            *[self._pool_for_topic(tid, variation_seed=f"{salt}:{tid}") for tid in topic_ids]
         )
-
-        buckets: Dict[str, List[JourneyArticle]] = {}
-        new_tokens: Dict[str, Optional[str]] = {}
-        for tid, articles, cont in fetched:
-            buckets[tid] = articles
-            new_tokens[tid] = cont
-
-        # Second page for topics exhausted by exclusions
-        refill_ids = [
-            tid
-            for tid in topic_ids
-            if new_tokens.get(tid)
-            and not any(a.id not in seen for a in buckets.get(tid, []))
-        ]
-        if refill_ids:
-            refilled = await asyncio.gather(
-                *[self._fetch_topic(tid, new_tokens.get(tid)) for tid in refill_ids]
-            )
-            for tid, articles, cont in refilled:
-                buckets[tid] = articles
-                new_tokens[tid] = cont
+        buckets = {tid: pool for tid, pool in zip(topic_ids, pools)}
 
         mixed = _interleave(buckets, topic_ids, limit=limit, exclude=seen)
+        title = journey_title(mode_norm, source_topics if mode_norm != "surprise" else topic_ids)
 
-        seen_list = list(seen)
-        if len(seen_list) > 200:
-            seen_list = seen_list[-200:]
-
-        has_more = any(new_tokens.get(tid) for tid in topic_ids) or len(mixed) >= limit
-        next_cursor = None
-        if has_more and mixed:
-            next_cursor = _encode_cursor(
-                {
-                    "mode": mode_norm,
-                    "topics": topic_ids,
-                    "tokens": new_tokens,
-                    "seen": seen_list,
-                }
-            )
-
-        return JourneyResponse(articles=mixed, next_cursor=next_cursor)
+        return JourneyResponse(
+            articles=mixed,
+            next_cursor=None,  # finite issue — no endless feed
+            title=title,
+            total=len(mixed),
+            mode=mode_norm,
+            topics=topic_ids,
+        )
 
 
 journey_service = JourneyService()

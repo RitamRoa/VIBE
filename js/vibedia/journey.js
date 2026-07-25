@@ -1,6 +1,6 @@
 /**
  * Journey Mode — calm fullscreen editorial reading.
- * Intro → path selection → swipeable article slides.
+ * Finite issue (~20) with a satisfying completion screen.
  */
 (function (global) {
   "use strict";
@@ -22,9 +22,11 @@
   let touchStartY = 0;
   let touchEndY = 0;
   let locked = false;
+  /** @type {{mode:string, topics:string[], sourceTopics:string[], seen:string[]}|null} */
+  let lastSession = null;
 
   function esc(s) {
-    return (global.VibediaUI && VibediaUI.escapeHtml)
+    return global.VibediaUI && VibediaUI.escapeHtml
       ? VibediaUI.escapeHtml(s)
       : String(s == null ? "" : s)
           .replace(/&/g, "&amp;")
@@ -87,9 +89,7 @@
       const res = await fetch("/wiki/journey/topics");
       if (!res.ok) return;
       const data = await res.json();
-      if (data.topics && data.topics.length) {
-        topics = data.topics;
-      }
+      if (data.topics && data.topics.length) topics = data.topics;
     } catch (_) {
       /* keep defaults */
     }
@@ -97,7 +97,7 @@
 
   function renderIntro() {
     const root = ensureOverlay();
-    root.classList.remove("is-reading");
+    root.classList.remove("is-reading", "is-complete");
     root.classList.add("is-open");
     root.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
@@ -146,11 +146,16 @@
         renderIntro();
       });
     });
-    root.querySelector("#journey-begin").onclick = startJourney;
+    root.querySelector("#journey-begin").onclick = () => {
+      const mode = surpriseOn || selected.size === 0 ? "surprise" : "topics";
+      const topicList = mode === "topics" ? Array.from(selected) : [];
+      launchJourney({ mode, topics: topicList, sourceTopics: topicList });
+    };
   }
 
   function renderLoading(message) {
     const root = ensureOverlay();
+    root.classList.remove("is-reading", "is-complete");
     root.classList.add("is-open");
     root.innerHTML = `
       <div class="journey-intro">
@@ -165,7 +170,7 @@
 
   function renderError(message, retryFn) {
     const root = ensureOverlay();
-    root.classList.remove("is-reading");
+    root.classList.remove("is-reading", "is-complete");
     root.innerHTML = `
       <div class="journey-intro">
         <button type="button" class="journey-close" aria-label="Close">✕</button>
@@ -180,6 +185,79 @@
     root.querySelector("#journey-retry").onclick = () => {
       if (typeof retryFn === "function") retryFn();
       else renderIntro();
+    };
+  }
+
+  function renderComplete() {
+    const root = ensureOverlay();
+    root.classList.remove("is-reading");
+    root.classList.add("is-open", "is-complete");
+
+    const title = (queue && queue.title) || "Journey";
+
+    root.innerHTML = `
+      <div class="journey-intro journey-complete">
+        <button type="button" class="journey-close" aria-label="Close">✕</button>
+        <div class="journey-intro-body">
+          <p class="journey-kicker">${esc(title)}</p>
+          <div class="journey-progress" aria-hidden="true">██████████</div>
+          <h2 class="journey-headline">You've reached the end of this journey.</h2>
+
+          <div class="journey-complete-actions">
+            <button type="button" class="journey-begin" id="journey-again">Begin Again</button>
+            <button type="button" class="journey-action-secondary" id="journey-explore">Continue Exploring</button>
+            <button type="button" class="journey-surprise" id="journey-surprise-end">✨ Surprise Me</button>
+            <button type="button" class="journey-action-ghost" id="journey-close-end">Close Journey</button>
+          </div>
+        </div>
+      </div>`;
+
+    root.querySelector(".journey-close").onclick = closeJourney;
+    root.querySelector("#journey-close-end").onclick = closeJourney;
+
+    root.querySelector("#journey-again").onclick = () => {
+      const sess = lastSession || { mode: "surprise", topics: [], sourceTopics: [] };
+      const mode = sess.mode === "explore" ? "topics" : sess.mode;
+      const topicsForAgain =
+        mode === "surprise"
+          ? []
+          : sess.sourceTopics && sess.sourceTopics.length
+            ? sess.sourceTopics
+            : sess.topics;
+      launchJourney({
+        mode: mode === "surprise" ? "surprise" : "topics",
+        topics: topicsForAgain,
+        sourceTopics: topicsForAgain,
+        exclude: sess.seen || [],
+        variation: String(Date.now()),
+      });
+    };
+
+    root.querySelector("#journey-explore").onclick = () => {
+      const sess = lastSession || { topics: [], sourceTopics: [] };
+      const sources =
+        sess.sourceTopics && sess.sourceTopics.length
+          ? sess.sourceTopics
+          : sess.topics && sess.topics.length
+            ? sess.topics
+            : ["finance"];
+      launchJourney({
+        mode: "explore",
+        topics: sources,
+        sourceTopics: sources,
+        exclude: sess.seen || [],
+        variation: String(Date.now()),
+      });
+    };
+
+    root.querySelector("#journey-surprise-end").onclick = () => {
+      launchJourney({
+        mode: "surprise",
+        topics: [],
+        sourceTopics: [],
+        exclude: (lastSession && lastSession.seen) || [],
+        variation: String(Date.now()),
+      });
     };
   }
 
@@ -199,6 +277,7 @@
   function renderSlide(article, direction) {
     const root = ensureOverlay();
     root.classList.add("is-open", "is-reading");
+    root.classList.remove("is-complete");
 
     const slide = document.createElement("div");
     slide.className = `journey-slide ${direction || "journey-slide--in"}`;
@@ -215,6 +294,10 @@
         : `<div class="editorial-cover editorial-cover--hero"><div class="editorial-cover-inner"><div class="editorial-cover-title">${esc(article.title)}</div><div class="editorial-cover-rule"></div><div class="editorial-cover-category">${esc(article.category)}</div></div></div>`;
     }
 
+    const isLast = queue && queue.isLast();
+    const pos = queue ? queue.position() : 1;
+    const total = queue ? queue.size() : 1;
+
     const meta = document.createElement("div");
     meta.className = "journey-meta";
     meta.innerHTML = `
@@ -222,7 +305,7 @@
       <h2 class="journey-title">${esc(article.title)}</h2>
       <p class="journey-summary">${esc(article.summary || "")}</p>
       <a class="journey-wiki" href="${esc(article.wikipedia_url)}" target="_blank" rel="noopener noreferrer">Wikipedia ↗</a>
-      <div class="journey-hint">Swipe for next</div>`;
+      <div class="journey-hint">${isLast ? "Swipe to finish" : "Swipe for next"} · ${pos}/${total}</div>`;
 
     slide.appendChild(visualWrap);
     slide.appendChild(meta);
@@ -237,9 +320,11 @@
     });
   }
 
-  async function startJourney() {
-    const mode = surpriseOn || selected.size === 0 ? "surprise" : "topics";
-    const topicList = mode === "topics" ? Array.from(selected) : [];
+  async function launchJourney(opts) {
+    const options = opts || {};
+    const mode = options.mode || "surprise";
+    const topicList = options.topics || [];
+    const sourceTopics = options.sourceTopics || topicList.slice();
 
     renderLoading("Preparing your path…");
 
@@ -247,27 +332,45 @@
     queue = new JourneyQueueManager({
       mode,
       topics: topicList,
+      sourceTopics,
       limit: 20,
+      variation: options.variation || String(Date.now()),
+      exclude: options.exclude || [],
     });
 
     try {
       const first = await queue.start();
+      lastSession = {
+        mode,
+        topics: queue.topics.slice(),
+        sourceTopics: sourceTopics.slice(),
+        seen: Array.from(queue.seen),
+      };
       renderSlide(first, "journey-slide--in");
-      queue.prefetchIfNeeded();
     } catch (err) {
-      renderError(err.message || "Journey unavailable.", startJourney);
+      renderError(err.message || "Journey unavailable.", () => launchJourney(options));
     }
+  }
+
+  async function startJourney() {
+    const mode = surpriseOn || selected.size === 0 ? "surprise" : "topics";
+    const topicList = mode === "topics" ? Array.from(selected) : [];
+    await launchJourney({ mode, topics: topicList, sourceTopics: topicList });
   }
 
   async function goNext() {
     if (!queue || locked) return;
     try {
-      const article = await queue.next();
-      if (!article) {
-        renderError("End of this path. Choose another.", renderIntro);
+      const result = await queue.next();
+      if (result.done) {
+        if (lastSession) {
+          lastSession.seen = Array.from(queue.seen);
+        }
+        renderComplete();
         return;
       }
-      renderSlide(article, "journey-slide--up");
+      if (lastSession) lastSession.seen = Array.from(queue.seen);
+      renderSlide(result.article, "journey-slide--up");
     } catch (err) {
       renderError(err.message || "Could not continue.", () => goNext());
     }
@@ -281,7 +384,7 @@
 
   function closeJourney() {
     if (overlay) {
-      overlay.classList.remove("is-open", "is-reading");
+      overlay.classList.remove("is-open", "is-reading", "is-complete");
       overlay.setAttribute("aria-hidden", "true");
       overlay.innerHTML = "";
     }
