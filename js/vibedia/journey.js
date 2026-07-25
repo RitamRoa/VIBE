@@ -19,8 +19,6 @@
   let topics = DEFAULT_TOPICS.slice();
   let selected = new Set();
   let surpriseOn = true;
-  let touchStartX = 0;
-  let touchStartY = 0;
   let locked = false;
   /** @type {{mode:string, topics:string[], sourceTopics:string[], seen:string[]}|null} */
   let lastSession = null;
@@ -43,49 +41,14 @@
     overlay.setAttribute("aria-hidden", "true");
     document.body.appendChild(overlay);
 
-    // Horizontal swipe = next/prev article. Vertical = native scroll.
-    overlay.addEventListener(
-      "touchstart",
-      (e) => {
-        if (!overlay.classList.contains("is-reading")) return;
-        const t = e.changedTouches[0];
-        touchStartX = t.screenX;
-        touchStartY = t.screenY;
-      },
-      { passive: true }
-    );
-
-    overlay.addEventListener(
-      "touchend",
-      (e) => {
-        if (!overlay.classList.contains("is-reading") || locked) return;
-        const t = e.changedTouches[0];
-        const dx = t.screenX - touchStartX;
-        const dy = t.screenY - touchStartY;
-        // Require clear horizontal intent
-        if (Math.abs(dx) < 56) return;
-        if (Math.abs(dx) < Math.abs(dy) * 1.15) return;
-        locked = true;
-        setTimeout(() => (locked = false), 320);
-        // Swipe left → next, swipe right → previous
-        if (dx < 0) goNext();
-        else goPrev();
-      },
-      { passive: true }
-    );
-
-    // Desktop: arrow keys for articles (wheel scrolls the slide)
+    // Keyboard arrows still work as a quiet desktop shortcut
     document.addEventListener("keydown", (e) => {
       if (!overlay || !overlay.classList.contains("is-reading") || locked) return;
       if (e.key === "ArrowLeft") {
         e.preventDefault();
-        locked = true;
-        setTimeout(() => (locked = false), 280);
         goPrev();
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        locked = true;
-        setTimeout(() => (locked = false), 280);
         goNext();
       }
     });
@@ -303,9 +266,11 @@
         : `<div class="editorial-cover editorial-cover--hero"><div class="editorial-cover-inner"><div class="editorial-cover-title">${esc(article.title)}</div><div class="editorial-cover-rule"></div><div class="editorial-cover-category">${esc(article.category)}</div></div></div>`;
     }
 
+    const isFirst = !queue || !queue.hasPrev();
     const isLast = queue && queue.isLast();
     const pos = queue ? queue.position() : 1;
     const total = queue ? queue.size() : 1;
+    const nextLabel = isLast ? "Finish" : "Next";
 
     const meta = document.createElement("div");
     meta.className = "journey-meta";
@@ -313,18 +278,27 @@
       <div class="journey-category">${esc(article.category || "")}</div>
       <h2 class="journey-title">${esc(article.title)}</h2>
       <p class="journey-summary">${esc(article.summary || "")}</p>
-      <a class="journey-wiki" href="${esc(article.wikipedia_url)}" target="_blank" rel="noopener noreferrer">Wikipedia ↗</a>
-      <div class="journey-hint">${isLast ? "Swipe left to finish" : "Swipe left for next · right for previous"} · ${pos}/${total}</div>`;
+      <a class="journey-wiki" href="${esc(article.wikipedia_url)}" target="_blank" rel="noopener noreferrer">Wikipedia ↗</a>`;
+
+    const pager = document.createElement("nav");
+    pager.className = "journey-pager";
+    pager.setAttribute("aria-label", "Journey pages");
+    pager.innerHTML = `
+      <button type="button" class="journey-pager-btn" id="journey-prev" ${isFirst ? "disabled" : ""}>Previous</button>
+      <span class="journey-pager-count">${pos} / ${total}</span>
+      <button type="button" class="journey-pager-btn journey-pager-btn--next" id="journey-next">${esc(nextLabel)}</button>`;
 
     slide.appendChild(visualWrap);
     slide.appendChild(meta);
+    slide.appendChild(pager);
 
     root.innerHTML = `
       <button type="button" class="journey-close journey-close--light" aria-label="Close">✕</button>`;
     root.appendChild(slide);
     root.querySelector(".journey-close").onclick = closeJourney;
+    root.querySelector("#journey-prev").onclick = () => goPrev();
+    root.querySelector("#journey-next").onclick = () => goNext();
 
-    // Reset scroll so each article starts at the top
     slide.scrollTop = 0;
 
     requestAnimationFrame(() => {

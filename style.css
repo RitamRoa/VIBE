@@ -1804,15 +1804,58 @@ body {
     margin-bottom: 8px;
 }
 
-.journey-hint {
-    margin-top: 24px;
-    margin-bottom: 8px;
+/* Google-style page controls — Previous · 3 / 20 · Next */
+.journey-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    max-width: 560px;
+    width: 100%;
+    margin: 28px auto 12px;
+    padding: 16px 0 8px;
+    border-top: 1px solid var(--faint);
+    flex-shrink: 0;
+}
+
+.journey-pager-btn {
+    background: none;
+    border: none;
+    padding: 8px 4px;
     font-family: var(--font-sans);
-    font-size: 0.65rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #888;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    cursor: pointer;
+    text-decoration: none;
+    min-width: 72px;
+}
+
+.journey-pager-btn:hover:not(:disabled) {
+    text-decoration: underline;
+}
+
+.journey-pager-btn:disabled {
+    color: #aaa;
+    cursor: default;
+}
+
+.journey-pager-btn--next {
+    text-align: right;
+}
+
+.journey-pager-count {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: #666;
+    letter-spacing: 0.06em;
+    min-width: 4.5rem;
     text-align: center;
+}
+
+.journey-hint {
+    display: none;
 }
 
 @media (max-width: 599px) {
