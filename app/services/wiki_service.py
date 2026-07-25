@@ -29,12 +29,14 @@ from app.config import (
     list_category_ids,
 )
 from app.models.wiki import (
+    ResolvedImage,
     WikiArticleCard,
     WikiArticleDetail,
     WikiHomeResponse,
     WikiSearchResponse,
     WikiTopicResponse,
 )
+from app.services.image_service import ImageService
 
 
 class WikiUpstreamError(Exception):
@@ -51,6 +53,7 @@ class WikiService:
     def __init__(self) -> None:
         self._client: Optional[httpx.AsyncClient] = None
         self._loop: Optional[asyncio.AbstractEventLoop] = None
+        self.images = ImageService(self._mediawiki)
 
     async def _get_client(self) -> httpx.AsyncClient:
         loop = asyncio.get_running_loop()
@@ -154,6 +157,10 @@ class WikiService:
         thumbnail = page.get("thumbnail") or {}
         if isinstance(thumbnail, dict):
             thumb = thumbnail.get("source")
+        if not thumb:
+            original = page.get("original") or {}
+            if isinstance(original, dict):
+                thumb = original.get("source")
         extract = page.get("extract") or page.get("description") or ""
         return WikiArticleCard(
             title=title,
@@ -238,8 +245,9 @@ class WikiService:
                         "prop": "extracts|pageimages|info",
                         "exintro": 1,
                         "explaintext": 1,
-                        "piprop": "thumbnail",
-                        "pithumbsize": 400,
+                        "piprop": "thumbnail|original",
+                        "pithumbsize": 640,
+                        "pilicense": "any",
                         "inprop": "url",
                         "titles": joined,
                     }
@@ -332,6 +340,9 @@ class WikiService:
                         if len(cards) >= HOME_SECTION_SIZE:
                             break
             cards = cards[:HOME_SECTION_SIZE]
+            cards = await self.images.attach_to_cards(
+                cards, category=config["label"]
+            )
             self._cache_cards(cards, ARTICLE_TTL)
             return [c.model_dump() for c in cards]
 
@@ -351,8 +362,9 @@ class WikiService:
                 "prop": "extracts|pageimages|info",
                 "exintro": 1,
                 "explaintext": 1,
-                "piprop": "thumbnail",
-                "pithumbsize": 400,
+                "piprop": "thumbnail|original",
+                "pithumbsize": 640,
+                "pilicense": "any",
                 "inprop": "url",
             }
         )
@@ -404,6 +416,9 @@ class WikiService:
         async def build() -> dict:
             if config["type"] == "random":
                 cards = await self._fetch_random(TOPIC_PAGE_SIZE)
+                cards = await self.images.attach_to_cards(
+                    cards, category=config["label"]
+                )
                 self._cache_cards(cards, ARTICLE_TTL)
                 return {
                     "articles": [c.model_dump() for c in cards],
@@ -425,6 +440,9 @@ class WikiService:
             members = (data.get("query") or {}).get("categorymembers") or []
             titles = [m["title"] for m in members if m.get("title")]
             cards = await self.fetch_cards_by_titles(titles, ttl=ARTICLE_TTL)
+            cards = await self.images.attach_to_cards(
+                cards, category=config["label"]
+            )
             self._cache_cards(cards, ARTICLE_TTL)
 
             cont = (data.get("continue") or {}).get("cmcontinue")
@@ -464,6 +482,9 @@ class WikiService:
             hits = (data.get("query") or {}).get("search") or []
             titles = [h["title"] for h in hits if h.get("title")]
             cards = await self.fetch_cards_by_titles(titles, ttl=ARTICLE_TTL)
+            cards = await self.images.attach_to_cards(
+                cards, category="Knowledge"
+            )
             self._cache_cards(cards, ARTICLE_TTL)
             return [c.model_dump() for c in cards]
 
@@ -494,16 +515,24 @@ class WikiService:
                 if not cards:
                     raise WikiUpstreamError("Article not found", 404)
                 card = cards[0]
+                resolved = card.image or await self.images.resolve(
+                    card.title,
+                    thumbnail=card.thumbnail,
+                    category="Knowledge",
+                )
                 return {
                     "title": card.title,
                     "summary": card.summary,
-                    "thumbnail": card.thumbnail,
+                    "thumbnail": resolved.image_url,
                     "url": card.url,
                     "pageid": card.pageid,
                     "description": None,
                     "extract": card.summary,
                     "related": [],
                     "sections": [],
+                    "image": resolved.model_dump()
+                    if hasattr(resolved, "model_dump")
+                    else resolved,
                 }
 
             assert isinstance(summary, dict)
@@ -554,21 +583,43 @@ class WikiService:
                 cards = await self.fetch_cards_by_titles(
                     related_titles, ttl=ARTICLE_TTL
                 )
+                cards = await self.images.attach_to_cards(
+                    cards, category="Knowledge"
+                )
                 related_cards = [c.model_dump() for c in cards]
+
+            # Resolve primary article visual (cached after first time)
+            resolved = await self.images.resolve(
+                summary.get("title") or normalized,
+                thumbnail=thumb,
+                category="Knowledge",
+            )
 
             return {
                 "title": summary.get("title") or normalized,
                 "summary": self._one_line(extract),
-                "thumbnail": thumb,
+                "thumbnail": resolved.image_url,
                 "url": desktop.get("page") or self._page_url(normalized),
                 "pageid": summary.get("pageid"),
                 "description": summary.get("description"),
                 "extract": extract,
                 "related": related_cards,
                 "sections": [],
+                "image": resolved.model_dump(),
             }
 
         raw = await wiki_cache.get_or_fetch(cache_key, ARTICLE_TTL, build)
+        # Ensure image is always present even for older cache entries
+        if not raw.get("image"):
+            resolved = await self.images.resolve(
+                raw.get("title") or normalized,
+                thumbnail=raw.get("thumbnail"),
+                category="Knowledge",
+            )
+            raw["image"] = resolved.model_dump()
+            raw["thumbnail"] = resolved.image_url
+            wiki_cache.set(cache_key, raw, ARTICLE_TTL)
+
         detail = WikiArticleDetail(**raw)
         # Keep card cache in sync for search / grids
         wiki_cache.set(
@@ -579,6 +630,7 @@ class WikiService:
                 thumbnail=detail.thumbnail,
                 url=detail.url,
                 pageid=detail.pageid,
+                image=detail.image,
             ).model_dump(),
             ARTICLE_TTL,
         )

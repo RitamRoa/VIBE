@@ -1195,17 +1195,114 @@ body {
     }
 }
 
-.vibedia-grid .card-image--empty,
-.vibedia-article-hero--empty {
-    background: repeating-linear-gradient(
-        -45deg,
-        #f7f7f7,
-        #f7f7f7 8px,
-        #eeeeee 8px,
-        #eeeeee 16px
-    );
+/* Editorial magazine covers — intentional, never a "missing image" look */
+.editorial-cover {
+    width: 100%;
+    height: 110px;
+    flex-shrink: 0;
+    background: var(--paper);
     border-bottom: var(--border);
-    min-height: 110px;
+    display: flex;
+    align-items: stretch;
+    box-sizing: border-box;
+}
+
+@media (min-width: 900px) {
+    .editorial-cover {
+        height: 120px;
+    }
+}
+
+.editorial-cover-inner {
+    flex: 1;
+    margin: 8px;
+    border: 1px solid var(--ink);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 0;
+}
+
+.editorial-cover-title {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+}
+
+.editorial-cover-line {
+    display: block;
+}
+
+.editorial-cover--short .editorial-cover-title {
+    font-size: 1.15rem;
+}
+
+.editorial-cover--medium .editorial-cover-title {
+    font-size: 0.95rem;
+}
+
+.editorial-cover--long .editorial-cover-title {
+    font-size: 0.78rem;
+}
+
+.editorial-cover-rule {
+    height: 1px;
+    background: var(--ink);
+    margin: 6px 0;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+.editorial-cover-category {
+    font-family: var(--font-sans);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+}
+
+.editorial-cover--hero {
+    height: auto;
+    min-height: 220px;
+    max-height: 360px;
+    border: var(--border);
+    margin-bottom: 20px;
+    border-bottom: var(--border);
+}
+
+.editorial-cover--hero .editorial-cover-inner {
+    margin: 16px;
+    padding: 28px 24px;
+}
+
+.editorial-cover--hero.editorial-cover--short .editorial-cover-title {
+    font-size: clamp(2rem, 6vw, 3rem);
+}
+
+.editorial-cover--hero.editorial-cover--medium .editorial-cover-title {
+    font-size: clamp(1.5rem, 4.5vw, 2.3rem);
+}
+
+.editorial-cover--hero.editorial-cover--long .editorial-cover-title {
+    font-size: clamp(1.15rem, 3.5vw, 1.7rem);
+}
+
+.editorial-cover--hero .editorial-cover-category {
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+}
+
+.editorial-cover--hero .editorial-cover-rule {
+    margin: 18px 0;
 }
 
 .vibedia-grid .card-content {

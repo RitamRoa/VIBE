@@ -156,21 +156,26 @@ class WikiCache:
         return f"card:{_normalize_title(title)}"
 
     @staticmethod
+    def image_key(title: str) -> str:
+        """Resolved visual cache key (thumbnail / article_image / editorial)."""
+        return f"image:v2:{_normalize_title(title)}"
+
+    @staticmethod
     def topic_key(topic: str, continue_token: Optional[str] = None) -> str:
         token = continue_token or "start"
-        return f"topic:{topic.lower()}:{token}"
+        return f"topic:v2:{topic.lower()}:{token}"
 
     @staticmethod
     def search_key(query: str) -> str:
-        return f"search:{query.strip().lower()}"
+        return f"search:v2:{query.strip().lower()}"
 
     @staticmethod
     def home_key() -> str:
-        return "home:v1"
+        return "home:v2"
 
     @staticmethod
     def category_home_key(topic: str) -> str:
-        return f"home_section:{topic.lower()}"
+        return f"home_section:v2:{topic.lower()}"
 
 
 def _normalize_title(title: str) -> str:

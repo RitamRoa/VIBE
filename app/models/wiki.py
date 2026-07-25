@@ -1,10 +1,28 @@
-"""Pydantic models for Vibedia / Wikipedia API responses."""
+"""Resolved visual payload for Vibedia article cards."""
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
+
+
+ImageType = Literal["thumbnail", "article_image", "editorial"]
+
+
+class ResolvedImage(BaseModel):
+    """
+    Final visual for a card/article.
+
+    Frontend never distinguishes sources beyond rendering:
+    - thumbnail / article_image → <img>
+    - editorial → EditorialCover component (local, no URL)
+    """
+
+    image_type: ImageType
+    image_url: Optional[str] = None
+    title: str
+    category: str = "Knowledge"
 
 
 class WikiArticleCard(BaseModel):
@@ -15,6 +33,7 @@ class WikiArticleCard(BaseModel):
     thumbnail: Optional[str] = None
     url: str
     pageid: Optional[int] = None
+    image: Optional[ResolvedImage] = None
 
 
 class WikiArticleDetail(WikiArticleCard):

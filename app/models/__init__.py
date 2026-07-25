@@ -1,6 +1,7 @@
 """Typed response models."""
 
 from app.models.wiki import (
+    ResolvedImage,
     WikiArticleCard,
     WikiArticleDetail,
     WikiHomeResponse,
@@ -9,6 +10,7 @@ from app.models.wiki import (
 )
 
 __all__ = [
+    "ResolvedImage",
     "WikiArticleCard",
     "WikiArticleDetail",
     "WikiHomeResponse",

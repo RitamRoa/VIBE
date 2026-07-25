@@ -36,19 +36,114 @@
     return list.includes(title);
   }
 
-  /** Lazy image with IntersectionObserver fallback. */
-  function lazyImage(src, alt) {
-    if (!src) {
-      return `<div class="card-image card-image--empty" aria-hidden="true"></div>`;
+  /**
+   * Split a title into display lines for editorial covers.
+   * Prefers natural word breaks; max 3 lines.
+   */
+  function splitTitleLines(title) {
+    const words = String(title || "")
+      .replace(/\s*\([^)]*\)\s*/g, " ")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    if (words.length === 0) return ["Untitled"];
+    if (words.length === 1) return [words[0].toUpperCase()];
+    if (words.length === 2) {
+      return [words[0].toUpperCase(), words[1].toUpperCase()];
     }
-    return `
-      <div class="card-image">
-        <img src="${escapeHtml(src)}" alt="${escapeHtml(alt || "")}" loading="lazy" decoding="async">
-      </div>`;
+
+    const lines = [];
+    let current = "";
+    words.forEach((word) => {
+      const next = current ? `${current} ${word}` : word;
+      if (next.length > 14 && current) {
+        lines.push(current.toUpperCase());
+        current = word;
+      } else {
+        current = next;
+      }
+    });
+    if (current) lines.push(current.toUpperCase());
+
+    if (lines.length <= 3) return lines;
+    return [lines[0], lines[1], lines.slice(2).join(" ")].slice(0, 3);
+  }
+
+  function coverSizeClass(title) {
+    const len = String(title || "").length;
+    if (len <= 16) return "editorial-cover--short";
+    if (len <= 36) return "editorial-cover--medium";
+    return "editorial-cover--long";
   }
 
   /**
-   * ArticleCard — thumbnail, title, one-line summary.
+   * EditorialCover — intentional magazine cover when no photo exists.
+   * @param {string} title
+   * @param {string} category
+   * @param {{hero?: boolean}} [opts]
+   * @returns {HTMLElement}
+   */
+  function EditorialCover(title, category, opts) {
+    const options = opts || {};
+    const el = document.createElement("div");
+    el.className =
+      "editorial-cover " +
+      coverSizeClass(title) +
+      (options.hero ? " editorial-cover--hero" : "");
+    el.setAttribute("role", "img");
+    el.setAttribute(
+      "aria-label",
+      `${title}${category ? ` — ${category}` : ""}`
+    );
+
+    const lines = splitTitleLines(title)
+      .map((line) => `<span class="editorial-cover-line">${escapeHtml(line)}</span>`)
+      .join("");
+
+    el.innerHTML = `
+      <div class="editorial-cover-inner">
+        <div class="editorial-cover-title">${lines}</div>
+        <div class="editorial-cover-rule" aria-hidden="true"></div>
+        <div class="editorial-cover-category">${escapeHtml(category || "Knowledge")}</div>
+      </div>`;
+    return el;
+  }
+
+  /**
+   * Resolve visual node from article.image payload.
+   * Frontend never cares which Wikipedia path produced a photo URL.
+   */
+  function ArticleVisual(article, opts) {
+    const options = opts || {};
+    const image = article.image || {};
+    const type = image.image_type;
+    const url = image.image_url || article.thumbnail || null;
+    const title = image.title || article.title || "";
+    const category = image.category || "Knowledge";
+
+    if (type === "editorial" || !url) {
+      return EditorialCover(title, category, { hero: options.hero });
+    }
+
+    const wrap = document.createElement("div");
+    wrap.className = options.hero
+      ? "vibedia-article-hero"
+      : "card-image";
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = title;
+    img.loading = options.hero ? "eager" : "lazy";
+    img.decoding = "async";
+    img.addEventListener("error", () => {
+      const cover = EditorialCover(title, category, { hero: options.hero });
+      wrap.replaceWith(cover);
+    });
+    wrap.appendChild(img);
+    return wrap;
+  }
+
+  /**
+   * ArticleCard — visual, title, one-line summary.
    * @param {object} article
    * @param {number} [index]
    * @returns {HTMLElement}
@@ -61,14 +156,19 @@
     }
     const href = `/vibedia/article/${encodeURIComponent(article.title)}`;
     const summary = article.summary || "No summary available.";
-    el.innerHTML = `
-      <a href="${href}" data-vibedia-link>
-        ${lazyImage(article.thumbnail, article.title)}
-        <div class="card-content">
-          <h2>${escapeHtml(article.title)}</h2>
-          <p>${escapeHtml(summary)}</p>
-        </div>
-      </a>`;
+
+    const link = document.createElement("a");
+    link.href = href;
+    link.setAttribute("data-vibedia-link", "");
+    link.appendChild(ArticleVisual(article));
+
+    const content = document.createElement("div");
+    content.className = "card-content";
+    content.innerHTML = `
+      <h2>${escapeHtml(article.title)}</h2>
+      <p>${escapeHtml(summary)}</p>`;
+    link.appendChild(content);
+    el.appendChild(link);
     return el;
   }
 
@@ -185,7 +285,7 @@
   }
 
   /**
-   * ArticlePage — large image, title, summary, wiki link, related, bookmark.
+   * ArticlePage — large visual, title, summary, wiki link, related, bookmark.
    * @param {object} article
    * @returns {HTMLElement}
    */
@@ -194,31 +294,31 @@
     root.className = "vibedia-article";
 
     const bookmarked = isBookmarked(article.title);
-    const img = article.thumbnail
-      ? `<div class="vibedia-article-hero"><img src="${escapeHtml(article.thumbnail)}" alt="${escapeHtml(article.title)}" loading="eager"></div>`
-      : `<div class="vibedia-article-hero vibedia-article-hero--empty"></div>`;
+    root.appendChild(ArticleVisual(article, { hero: true }));
+
+    const body = document.createElement("div");
+    body.className = "vibedia-article-body";
 
     const desc = article.description
       ? `<p class="vibedia-article-desc">${escapeHtml(article.description)}</p>`
       : "";
 
-    root.innerHTML = `
-      ${img}
-      <div class="vibedia-article-body">
-        <div class="vibedia-article-actions">
-          <button type="button" class="vibedia-bookmark-btn ${bookmarked ? "is-active" : ""}" aria-pressed="${bookmarked}">
-            ${bookmarked ? "★ Bookmarked" : "☆ Bookmark"}
-          </button>
-          <a class="vibedia-wiki-link" href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer">
-            View on Wikipedia ↗
-          </a>
-        </div>
-        <h1 class="vibedia-article-title">${escapeHtml(article.title)}</h1>
-        ${desc}
-        <div class="vibedia-article-extract">${escapeHtml(article.extract || article.summary || "No summary available.")}</div>
-      </div>`;
+    body.innerHTML = `
+      <div class="vibedia-article-actions">
+        <button type="button" class="vibedia-bookmark-btn ${bookmarked ? "is-active" : ""}" aria-pressed="${bookmarked}">
+          ${bookmarked ? "★ Bookmarked" : "☆ Bookmark"}
+        </button>
+        <a class="vibedia-wiki-link" href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer">
+          View on Wikipedia ↗
+        </a>
+      </div>
+      <h1 class="vibedia-article-title">${escapeHtml(article.title)}</h1>
+      ${desc}
+      <div class="vibedia-article-extract">${escapeHtml(article.extract || article.summary || "No summary available.")}</div>`;
 
-    const btn = root.querySelector(".vibedia-bookmark-btn");
+    root.appendChild(body);
+
+    const btn = body.querySelector(".vibedia-bookmark-btn");
     btn.addEventListener("click", () => {
       const on = toggleBookmark(article.title);
       btn.classList.toggle("is-active", on);
@@ -253,6 +353,8 @@
 
   global.VibediaUI = {
     escapeHtml,
+    EditorialCover,
+    ArticleVisual,
     ArticleCard,
     ArticleGrid,
     CategorySection,
