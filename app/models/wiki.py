@@ -66,3 +66,24 @@ class WikiSearchResponse(BaseModel):
 
     query: str
     articles: List[WikiArticleCard]
+
+
+class JourneyArticle(BaseModel):
+    """Normalized Journey slide — never a raw Wikipedia payload."""
+
+    id: str
+    title: str
+    summary: str = ""
+    image: Optional[str] = None
+    image_type: ImageType = "editorial"
+    category: str = "Knowledge"
+    wikipedia_url: str
+    page_id: Optional[int] = None
+
+
+class JourneyResponse(BaseModel):
+    """One Journey batch plus opaque cursor for the next prefetch."""
+
+    articles: List[JourneyArticle]
+    next_cursor: Optional[str] = None
+

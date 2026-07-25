@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 
 from app.routes.wiki import router as wiki_router
+from app.routes.journey import router as journey_router
 from app.services.wiki_service import wiki_service
 
 # Load Environment Variables
@@ -35,8 +36,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Vibedia Wikipedia API (must register before StaticFiles mount)
+# Vibedia Wikipedia + Journey APIs (must register before StaticFiles mount)
 app.include_router(wiki_router)
+app.include_router(journey_router)
 
 # API Configuration
 API_KEY = os.getenv("NEWS_API_KEY")

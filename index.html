@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="style.css?v=12">
+    <link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 
@@ -34,7 +34,10 @@
             </div>
             <h1>VIBE <span class="jp-text">/ ニュース</span></h1>
             <div class="reel-cta-group">
-                <button id="reel-btn" class="reel-launcher" onclick="openReelMode()">
+                <button type="button" class="journey-launcher" data-open-journey aria-label="Open Journey">
+                    <span class="journey-launcher-icon">▶</span>
+                </button>
+                <button id="reel-btn" class="reel-launcher" onclick="openReelMode()" aria-label="Open Reels">
                     <span class="reel-icon">▶</span>
                 </button>
             </div>
@@ -562,5 +565,8 @@
             }
         }
     </script>
+    <script src="/js/vibedia/components.js?v=4"></script>
+    <script src="/js/vibedia/journey-queue.js?v=1"></script>
+    <script src="/js/vibedia/journey.js?v=1"></script>
 </body>
 </html>

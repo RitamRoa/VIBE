@@ -86,7 +86,9 @@ async def wiki_article(title: str) -> WikiArticleDetail:
 
 @router.get("/categories")
 async def wiki_categories():
-    """List configured Vibedia categories (for future-proof clients)."""
+    """List configured Vibedia home categories (for future-proof clients)."""
+    from app.config import list_category_ids
+
     return {
         "categories": [
             {
@@ -94,6 +96,7 @@ async def wiki_categories():
                 "label": cfg["label"],
                 "type": cfg["type"],
             }
-            for cfg in WIKI_CATEGORIES.values()
+            for cid in list_category_ids()
+            for cfg in [WIKI_CATEGORIES[cid]]
         ]
     }
