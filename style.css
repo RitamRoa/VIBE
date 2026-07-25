@@ -50,10 +50,15 @@ body {
     text-overflow: ellipsis;
 }
 
-.brand .reel-cta-group {
+.brand .reel-cta-group,
+.brand .menu-cta-group {
     display: flex;
     align-items: center;
     flex-shrink: 0;
+}
+
+.menu-cta-group {
+    min-width: 40px;
 }
 
 .jp-text {
@@ -396,42 +401,42 @@ body {
 .reel-cta-group {
     display: flex;
     align-items: center;
-    /* No gap here, we handle it in animation for smooth collapse */
 }
 
-.reel-cta-text {
+/* Startup notice — points at hamburger / Vibedia (~3s) */
+.menu-cta-text {
     font-family: var(--font-sans);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #444;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     white-space: nowrap;
     overflow: hidden;
     opacity: 0;
     max-width: 0;
-    /* Total duration 5s: Enter(1s) + Stay(2s) + Leave(1s) + Buffer */
-    animation: notifyCollapse 5s cubic-bezier(0.25, 1, 0.5, 1) 0.5s forwards;
+    animation: menuNotifyCollapse 3s cubic-bezier(0.25, 1, 0.5, 1) 0.4s forwards;
 }
 
-@keyframes notifyCollapse {
-    0% { 
-        opacity: 0; 
+@keyframes menuNotifyCollapse {
+    0% {
+        opacity: 0;
         max-width: 0;
-        margin-right: 0;
+        margin-left: 0;
     }
-    15% { 
-        opacity: 1; 
-        max-width: 200px; /* ample width for text */
-        margin-right: 10px;
+    18% {
+        opacity: 1;
+        max-width: 180px;
+        margin-left: 8px;
     }
-    75% { 
-        opacity: 1; 
-        max-width: 200px; 
-        margin-right: 10px;
+    72% {
+        opacity: 1;
+        max-width: 180px;
+        margin-left: 8px;
     }
-    100% { 
-        opacity: 0; 
+    100% {
+        opacity: 0;
         max-width: 0;
-        margin-right: 0;
+        margin-left: 0;
     }
 }
 
@@ -923,6 +928,10 @@ body {
         display: none !important;
     }
     
+    .menu-cta-text {
+        font-size: 0.62rem;
+    }
+    
     .menu-toggle {
         width: 40px;
         height: 40px;
@@ -1042,11 +1051,15 @@ body {
     text-decoration: underline;
 }
 
-.menu-divider {
-    height: 1px;
-    background: var(--ink);
-    margin: 8px 20px;
-    opacity: 0.85;
+/* Single ink rule above + below Vibedia (no double lines) */
+.menu-nav .menu-item:has(+ .menu-item-vibedia) {
+    border-bottom: none;
+}
+
+.menu-item-vibedia {
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    margin-top: 4px;
 }
 
 .menu-item-link {

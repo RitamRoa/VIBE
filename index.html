@@ -16,26 +16,26 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 
     <header class="sticky-header">
         <div class="brand">
-            <button class="menu-toggle" onclick="toggleMenu()" aria-label="Menu">
-                <span class="hamburger-icon">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </span>
-                <span class="onboarding-tooltip menu-tooltip">About</span>
-            </button>
+            <div class="menu-cta-group">
+                <button class="menu-toggle" onclick="toggleMenu()" aria-label="Menu">
+                    <span class="hamburger-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </button>
+                <span class="menu-cta-text">NEW UPDATE - VIBEDIA</span>
+            </div>
             <h1>VIBE <span class="jp-text">/ ニュース</span></h1>
             <div class="reel-cta-group">
-                <span class="reel-cta-text">new feature added check it out!</span>
                 <button id="reel-btn" class="reel-launcher" onclick="openReelMode()">
                     <span class="reel-icon">▶</span>
-                    <span class="onboarding-tooltip reel-tooltip">Reels</span>
                 </button>
             </div>
         </div>
@@ -57,9 +57,7 @@
             <button class="menu-item" onclick="openModal('about')">About</button>
             <button class="menu-item" onclick="openModal('terms')">Terms & Conditions</button>
             <button class="menu-item" onclick="openModal('contact')">Contact</button>
-            <div class="menu-divider" role="separator"></div>
-            <a class="menu-item menu-item-link" href="/vibedia">Vibedia</a>
-            <div class="menu-divider" role="separator"></div>
+            <a class="menu-item menu-item-link menu-item-vibedia" href="/vibedia">Vibedia</a>
         </nav>
         <div class="menu-footer">made with <span class="heart">❤</span> by roa</div>
     </div>
