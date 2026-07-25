@@ -19,8 +19,8 @@
   let topics = DEFAULT_TOPICS.slice();
   let selected = new Set();
   let surpriseOn = true;
+  let touchStartX = 0;
   let touchStartY = 0;
-  let touchEndY = 0;
   let locked = false;
   /** @type {{mode:string, topics:string[], sourceTopics:string[], seen:string[]}|null} */
   let lastSession = null;
@@ -43,45 +43,54 @@
     overlay.setAttribute("aria-hidden", "true");
     document.body.appendChild(overlay);
 
+    // Horizontal swipe = next/prev article. Vertical = native scroll.
     overlay.addEventListener(
       "touchstart",
       (e) => {
         if (!overlay.classList.contains("is-reading")) return;
-        touchStartY = e.changedTouches[0].screenY;
+        const t = e.changedTouches[0];
+        touchStartX = t.screenX;
+        touchStartY = t.screenY;
       },
       { passive: true }
     );
+
     overlay.addEventListener(
       "touchend",
       (e) => {
-        if (!overlay.classList.contains("is-reading")) return;
-        touchEndY = e.changedTouches[0].screenY;
-        handleSwipe();
-      },
-      { passive: true }
-    );
-    overlay.addEventListener(
-      "wheel",
-      (e) => {
         if (!overlay.classList.contains("is-reading") || locked) return;
+        const t = e.changedTouches[0];
+        const dx = t.screenX - touchStartX;
+        const dy = t.screenY - touchStartY;
+        // Require clear horizontal intent
+        if (Math.abs(dx) < 56) return;
+        if (Math.abs(dx) < Math.abs(dy) * 1.15) return;
         locked = true;
-        setTimeout(() => (locked = false), 650);
-        if (e.deltaY > 30) goNext();
-        else if (e.deltaY < -30) goPrev();
+        setTimeout(() => (locked = false), 320);
+        // Swipe left → next, swipe right → previous
+        if (dx < 0) goNext();
+        else goPrev();
       },
       { passive: true }
     );
-    return overlay;
-  }
 
-  function handleSwipe() {
-    if (locked) return;
-    const dy = touchStartY - touchEndY;
-    if (Math.abs(dy) < 48) return;
-    locked = true;
-    setTimeout(() => (locked = false), 650);
-    if (dy > 0) goNext();
-    else goPrev();
+    // Desktop: arrow keys for articles (wheel scrolls the slide)
+    document.addEventListener("keydown", (e) => {
+      if (!overlay || !overlay.classList.contains("is-reading") || locked) return;
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        locked = true;
+        setTimeout(() => (locked = false), 280);
+        goPrev();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        locked = true;
+        setTimeout(() => (locked = false), 280);
+        goNext();
+      }
+    });
+
+    return overlay;
   }
 
   async function loadTopics() {
@@ -305,7 +314,7 @@
       <h2 class="journey-title">${esc(article.title)}</h2>
       <p class="journey-summary">${esc(article.summary || "")}</p>
       <a class="journey-wiki" href="${esc(article.wikipedia_url)}" target="_blank" rel="noopener noreferrer">Wikipedia ↗</a>
-      <div class="journey-hint">${isLast ? "Swipe to finish" : "Swipe for next"} · ${pos}/${total}</div>`;
+      <div class="journey-hint">${isLast ? "Swipe left to finish" : "Swipe left for next · right for previous"} · ${pos}/${total}</div>`;
 
     slide.appendChild(visualWrap);
     slide.appendChild(meta);
@@ -314,6 +323,9 @@
       <button type="button" class="journey-close journey-close--light" aria-label="Close">✕</button>`;
     root.appendChild(slide);
     root.querySelector(".journey-close").onclick = closeJourney;
+
+    // Reset scroll so each article starts at the top
+    slide.scrollTop = 0;
 
     requestAnimationFrame(() => {
       slide.classList.add("is-visible");
@@ -370,16 +382,16 @@
         return;
       }
       if (lastSession) lastSession.seen = Array.from(queue.seen);
-      renderSlide(result.article, "journey-slide--up");
+      renderSlide(result.article, "journey-slide--next");
     } catch (err) {
       renderError(err.message || "Could not continue.", () => goNext());
     }
   }
 
   function goPrev() {
-    if (!queue) return;
+    if (!queue || locked) return;
     const article = queue.prev();
-    if (article) renderSlide(article, "journey-slide--down");
+    if (article) renderSlide(article, "journey-slide--prev");
   }
 
   function closeJourney() {

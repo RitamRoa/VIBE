@@ -31,17 +31,20 @@ def _article_id(card: WikiArticleCard) -> str:
     return f"t:{card.title.strip().lower().replace(' ', '_')}"
 
 
-def _normalize(card: WikiArticleCard, category_label: str) -> JourneyArticle:
+def _normalize(
+    card: WikiArticleCard, category_label: str, *, summary: Optional[str] = None
+) -> JourneyArticle:
     """Map a Vibedia card into the Journey article contract."""
     image = card.image
     image_type = image.image_type if image else "editorial"
     image_url = image.image_url if image else card.thumbnail
     if not image_url:
         image_type = "editorial"
+    text = (summary if summary is not None else card.summary) or ""
     return JourneyArticle(
         id=_article_id(card),
         title=card.title,
-        summary=card.summary or "",
+        summary=text,
         image=image_url,
         image_type=image_type,  # type: ignore[arg-type]
         category=(image.category if image and image.category else category_label),
@@ -139,7 +142,14 @@ class JourneyService:
 
         # Stable per-session shuffle of the pool (vary Begin Again)
         cards = sorted(cards, key=lambda c: _shuffle_key(variation_seed, c.title))
-        return [_normalize(c, label) for c in cards]
+
+        # Full intro extracts for Journey reading (not truncated card teasers)
+        intros = await wiki_service.get_intro_extracts([c.title for c in cards])
+        articles: List[JourneyArticle] = []
+        for card in cards:
+            full = intros.get(card.title) or card.summary or ""
+            articles.append(_normalize(card, label, summary=full))
+        return articles
 
     async def get_journey(
         self,

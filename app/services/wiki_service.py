@@ -145,6 +145,41 @@ class WikiService:
         return cleaned
 
     @staticmethod
+    def _full_intro(text: Optional[str], fallback: str = "") -> str:
+        """Full article lead for Journey — not truncated to a card teaser."""
+        if not text:
+            return fallback
+        cleaned = " ".join(str(text).replace("\r", " ").split())
+        return cleaned
+
+    async def get_intro_extracts(self, titles: List[str]) -> Dict[str, str]:
+        """
+        Batch-fetch full intro extracts for Journey reading.
+        Returns title → intro text (uncapped for magazine reading).
+        """
+        if not titles:
+            return {}
+        out: Dict[str, str] = {}
+        chunk_size = 20
+        for i in range(0, len(titles), chunk_size):
+            chunk = titles[i : i + chunk_size]
+            data = await self._mediawiki(
+                {
+                    "action": "query",
+                    "prop": "extracts",
+                    "exintro": 1,
+                    "explaintext": 1,
+                    "titles": "|".join(chunk),
+                }
+            )
+            for page in (data.get("query") or {}).get("pages") or []:
+                title = page.get("title")
+                if not title or page.get("missing"):
+                    continue
+                out[title] = self._full_intro(page.get("extract") or "")
+        return out
+
+    @staticmethod
     def _page_url(title: str) -> str:
         return f"https://en.wikipedia.org/wiki/{quote(title.replace(' ', '_'))}"
 
