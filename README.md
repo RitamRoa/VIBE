@@ -18,7 +18,7 @@
 
    Step 1 - clone the repo.
 
-      git clone https://github.com/RitamRoa/VIBE.git
+       git clone https://github.com/RitamRoa/VIBE.git
 
   Step 2 - install requirements.
 
