@@ -6,6 +6,7 @@
 
     fastapi
     uvicorn
+    httpx
     requests
     python-multipart
     python-dotenv
@@ -34,6 +35,8 @@
 
   Step 5 - Lets run the app 
 
+        python -m pip install "uvicorn[standard]"
+        python -m pip install fastapi
        .\.venv/Scripts/python -m uvicorn main:app --reload host 0.0.0.0 --port 8000 
 
 
