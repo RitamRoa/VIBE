@@ -4,13 +4,13 @@
 
 ## Requirements 
 
-    fastapi
-    uvicorn
-    httpx
-    requests
-    python-multipart
-    python-dotenv
-    Pillow
+       fastapi
+       uvicorn
+       httpx
+       requests
+       python-multipart
+       python-dotenv
+       Pillow
 
   the above requirements need to be installed -> preferably in requirements.txt file
 
