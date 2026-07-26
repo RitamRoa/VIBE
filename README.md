@@ -1,6 +1,6 @@
-# VIBE / ニュース
+# VIBE / ニュース and now also VIBEDIA / 知識
 
-### News for people who like japanese theme.
+### News and also 知識 for people who like japanese theme.
 
 ## Requirements 
 
