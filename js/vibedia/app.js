@@ -132,7 +132,7 @@
     root.appendChild(heading);
 
     if (!query) {
-      root.appendChild(VibediaUI.EmptyState("Type a query to search Wikipedia."));
+      root.appendChild(VibediaUI.EmptyState("Type a query to search Vibedia."));
       return;
     }
 

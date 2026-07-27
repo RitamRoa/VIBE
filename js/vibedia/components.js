@@ -212,7 +212,7 @@
         type="search"
         name="q"
         class="vibedia-search-input"
-        placeholder="${escapeHtml(options.placeholder || "Search Wikipedia...")}"
+        placeholder="${escapeHtml(options.placeholder || "Search Vibedia...")}"
         value="${escapeHtml(options.value || "")}"
         autocomplete="off"
         enterkeyhint="search"
