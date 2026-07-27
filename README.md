@@ -1,15 +1,16 @@
-# VIBE / ニュース
+# VIBE / ニュース and now also VIBEDIA / 知識
 
-### News for people who like japanese theme.
+### News and also 知識 for people who like japanese theme.
 
 ## Requirements 
 
-    fastapi
-    uvicorn
-    requests
-    python-multipart
-    python-dotenv
-    Pillow
+       fastapi
+       uvicorn
+       httpx
+       requests
+       python-multipart
+       python-dotenv
+       Pillow
 
   the above requirements need to be installed -> preferably in requirements.txt file
 
@@ -17,7 +18,7 @@
 
    Step 1 - clone the repo.
 
-      git clone https://github.com/RitamRoa/VIBE.git
+       git clone https://github.com/RitamRoa/VIBE.git
 
   Step 2 - install requirements.
 
@@ -34,7 +35,9 @@
 
   Step 5 - Lets run the app 
 
-       .\.venv/Scripts/python -m uvicorn main:app --reload host 0.0.0.0 --port 8000 
+       python -m pip install "uvicorn[standard]"
+       python -m pip install fastapi
+      .\.venv/Scripts/python -m uvicorn main:app --reload host 0.0.0.0 --port 8000 
 
 
 
